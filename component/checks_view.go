@@ -9,25 +9,44 @@ import (
 	"strconv"
 )
 
-type ChecksView struct{}
-
-func NewChecksView() *ChecksView {
-	return &ChecksView{}
+type CheckSuite struct {
+	All      []*github.CheckRun
+	Selected *github.CheckRun
 }
 
-func (c *ChecksView) Load(app *tview.Application, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) error {
-	flex := tview.NewFlex()
-	commitList := buildCommitList(commits)
-	checkRunsTable := buildCheckRunsTable(checkRunsList)
+type ChecksView struct {
+	CheckSuiteChan      chan CheckSuite
+	EscapeCheckListChan chan bool
+	SelectedCommitChan  chan string
+}
 
-	flex.AddItem(commitList, 0, 1, false)
-	flex.AddItem(checkRunsTable, 0, 2, true)
+func NewChecksView() *ChecksView {
+	return &ChecksView{
+		CheckSuiteChan:      make(chan CheckSuite),
+		EscapeCheckListChan: make(chan bool),
+		SelectedCommitChan:  make(chan string),
+	}
+}
+
+func (c *ChecksView) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) error {
+	commitList := c.buildCommitList(commits)
+	checkRunsTable := c.buildCheckRunsTable(checkRunsList)
+
+	flex := tview.NewFlex()
+
+	if len(checkRunsList.CheckRuns) == 0 || mode == ModeChooseCommits {
+		flex.AddItem(commitList, 0, 1, true)
+		flex.AddItem(checkRunsTable, 0, 2, false)
+	} else {
+		flex.AddItem(commitList, 0, 1, false)
+		flex.AddItem(checkRunsTable, 0, 2, true)
+	}
 
 	app.SetRoot(flex, true)
 	return nil
 }
 
-func buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Table {
+func (c *ChecksView) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Table {
 	style := tcell.StyleDefault.
 		Foreground(tcell.ColorMediumTurquoise).
 		Background(tcell.ColorDarkSlateGray).
@@ -46,13 +65,26 @@ func buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Tabl
 
 	checkRuns := checkRunsList.CheckRuns
 
+	if len(checkRuns) == 0 {
+		table.SetCell(0, 0,
+			tview.NewTableCell("").
+				SetSelectable(false))
+
+		table.SetCell(0, 1,
+			tview.NewTableCell("No data found for this commit.").
+				SetTextColor(tcell.ColorDarkGray).
+				SetAttributes(tcell.AttrBold).
+				SetSelectable(false))
+	}
+
 	sort.Slice(checkRuns, func(i, j int) bool {
 		return *checkRuns[i].CheckSuite.ID < *checkRuns[j].CheckSuite.ID
 	})
 
 	var (
-		row = 0
-		mem []int64
+		mem             []int64
+		row             = 0
+		checkRowMapping = map[int]*github.CheckRun{}
 	)
 
 	for _, checkRun := range checkRuns {
@@ -89,19 +121,28 @@ func buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Tabl
 				SetAttributes(tcell.AttrBold).
 				SetSelectable(true))
 
+		checkRowMapping[row] = checkRun
 		row = row + 1
 	}
 
-	if row > 0 {
-		table.
-			SetSelectable(true, false).
-			Select(1, 0)
-	}
+	table.
+		SetSelectable(true, false).
+		SetDoneFunc(func(key tcell.Key) {
+			c.EscapeCheckListChan <- true
+		}).
+		SetSelectedFunc(func(row, column int) {
+			selected := checkRowMapping[row]
+
+			c.CheckSuiteChan <- CheckSuite{
+				All:      matchesCheckSuite(checkRunsList, selected),
+				Selected: selected,
+			}
+		})
 
 	return table
 }
 
-func buildCommitList(commits []*github.RepositoryCommit) *tview.List {
+func (c *ChecksView) buildCommitList(commits []*github.RepositoryCommit) *tview.List {
 	list := tview.NewList()
 	list.
 		SetMainTextColor(tcell.ColorMediumTurquoise).
@@ -126,11 +167,17 @@ func buildCommitList(commits []*github.RepositoryCommit) *tview.List {
 			*commit.SHA,
 			humanize.Time(*commit.Commit.Committer.Date),
 			0,
-			func() {},
+			c.listItemSelectedFunc(*commit.SHA),
 		)
 	}
 
 	return list
+}
+
+func (c *ChecksView) listItemSelectedFunc(sha string) func() {
+	return func() {
+		c.SelectedCommitChan <- sha
+	}
 }
 
 func checkStatus(check *github.CheckRun) (string, tcell.Color) {
@@ -147,4 +194,14 @@ func checkStatus(check *github.CheckRun) (string, tcell.Color) {
 	default:
 		return "•", tcell.ColorYellow
 	}
+}
+
+func matchesCheckSuite(checkRunsList *github.ListCheckRunsResults, selected *github.CheckRun) []*github.CheckRun {
+	var result []*github.CheckRun
+	for _, item := range checkRunsList.CheckRuns {
+		if *item.CheckSuite.ID == *selected.CheckSuite.ID {
+			result = append(result, item)
+		}
+	}
+	return result
 }

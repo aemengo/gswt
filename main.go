@@ -4,14 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"os/signal"
-	"strconv"
-	"strings"
-	"syscall"
-
 	"github.com/aemengo/gswt/controller"
 	"github.com/aemengo/gswt/service"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v35/github"
 	"github.com/rivo/tview"
@@ -50,16 +47,12 @@ func main() {
 		tc     = oauth2.NewClient(ctx, ts)
 		client = github.NewClient(tc)
 
-		sigs = make(chan os.Signal, 1)
-
 		svc  = service.New(ctx, client, org, repo, prNum)
 		app  = tview.NewApplication()
 		ctrl = controller.New(svc, app)
 	)
 
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	err = ctrl.Start(sigs)
+	err = ctrl.Run()
 	expectNoError(err)
 }
 

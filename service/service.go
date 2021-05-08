@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/google/go-github/v35/github"
+	"sort"
 )
 
 type Service struct {
@@ -28,6 +29,10 @@ func (s *Service) Commits() ([]*github.RepositoryCommit, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(commits, func(i, j int) bool {
+		return commits[i].Commit.Committer.Date.After(*commits[j].Commit.Committer.Date)
+	})
 
 	return commits, nil
 }
