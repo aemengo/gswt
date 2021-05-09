@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/aemengo/gswt/component"
 	"github.com/aemengo/gswt/service"
 	"github.com/google/go-github/v35/github"
@@ -45,11 +46,31 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns *github.ListCheckRunsResults) {
+	var (
+		chkSuite component.CheckSuite
+		logsPath string
+	)
+
 	for {
 		select {
-		case chk := <-c.checksView.CheckSuiteChan:
-			c.logsView.Load(c.app, chk)
+		case chkSuite = <-c.checksView.CheckSuiteChan:
+			var err error
+			logsPath, err = c.svc.Logs(chkSuite.Selected)
+			if err != nil {
+				fmt.Println("[DEBUG]", err)
+				continue
+			}
 
+			c.logsView.Load(c.app, component.ModeParseLogs, chkSuite, logsPath)
+		case chkSuite = <-c.logsView.LogsCheckSuiteChan:
+			var err error
+			logsPath, err = c.svc.Logs(chkSuite.Selected)
+			if err != nil {
+				fmt.Println("[DEBUG]", err)
+				continue
+			}
+
+			c.logsView.Load(c.app, component.ModeParseLogs, chkSuite, logsPath)
 		case sha := <-c.checksView.SelectedCommitChan:
 			var err error
 			checkRuns, err = c.svc.CheckRuns(sha)
@@ -58,6 +79,10 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			}
 
 			c.checksView.Load(c.app, component.ModeChooseChecks, commits, checkRuns)
+
+		// when ESC is pressed
+		case <-c.logsView.EscapeLogsTextViewChan:
+			c.logsView.Load(c.app, component.ModeChooseChecks, chkSuite, logsPath)
 		case <-c.checksView.EscapeCheckListChan:
 			c.checksView.Load(c.app, component.ModeChooseCommits, commits, checkRuns)
 		case <-c.logsView.EscapeLogsView:

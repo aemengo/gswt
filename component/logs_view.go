@@ -7,23 +7,64 @@ import (
 )
 
 type LogsView struct {
-	EscapeLogsView chan bool
+	LogsCheckSuiteChan     chan CheckSuite
+	EscapeLogsView         chan bool
+	EscapeLogsTextViewChan chan bool
 }
 
 func NewLogsView() *LogsView {
 	return &LogsView{
-		EscapeLogsView: make(chan bool),
+		LogsCheckSuiteChan:     make(chan CheckSuite),
+		EscapeLogsView:         make(chan bool),
+		EscapeLogsTextViewChan: make(chan bool),
 	}
 }
 
-func (c *LogsView) Load(app *tview.Application, checks CheckSuite) error {
+func (c *LogsView) Load(app *tview.Application, mode int, checks CheckSuite, logsPath string) error {
 	commitList := c.buildChecksList(checks)
+	logTxtView := c.buildLogs(checks, logsPath)
 
 	flex := tview.NewFlex()
-	flex.AddItem(commitList, 0, 1, true)
+
+	if !shouldShowLogs(checks.Selected) || mode == ModeChooseChecks {
+		flex.AddItem(commitList, 0, 1, true)
+		flex.AddItem(logTxtView, 0, 2, false)
+	} else {
+		flex.AddItem(commitList, 0, 1, false)
+		flex.AddItem(logTxtView, 0, 2, true)
+	}
 
 	app.SetRoot(flex, true)
 	return nil
+}
+
+func (c *LogsView) buildLogs(checks CheckSuite, logsPath string) *tview.TextView {
+	txtView := tview.NewTextView()
+	txtView.
+		SetDynamicColors(true).
+		SetBorder(true).
+		SetTitleColor(tcell.ColorDimGray).
+		SetBorderPadding(1, 1, 2, 2).
+		SetTitle(tview.TranslateANSI(bold.Sprint("| logs |"))).
+		SetBorderColor(tcell.ColorDimGray).
+		SetBorderAttributes(tcell.AttrBold).
+		SetBackgroundColor(viewBackgroundColor)
+
+	if shouldShowLogs(checks.Selected) {
+		txtView.
+			SetText(tview.TranslateANSI(bold.Sprintln(logsPath))).
+			SetTextColor(tcell.ColorDarkGray)
+	} else {
+		txtView.
+			SetText(tview.TranslateANSI(bold.Sprint("Sorry, logs only supported for 'success' or 'failure' runs"))).
+			SetTextColor(tcell.ColorDarkGray)
+	}
+
+	txtView.SetDoneFunc(func(key tcell.Key) {
+		c.EscapeLogsTextViewChan <- true
+	})
+
+	return txtView
 }
 
 func (c *LogsView) buildChecksList(checks CheckSuite) *tview.List {
@@ -52,7 +93,7 @@ func (c *LogsView) buildChecksList(checks CheckSuite) *tview.List {
 			*chk.Name,
 			checkRunStatus(chk),
 			0,
-			func() {},
+			c.listItemSelectedFunc(checks, chk),
 		)
 	}
 
@@ -64,6 +105,15 @@ func (c *LogsView) buildChecksList(checks CheckSuite) *tview.List {
 	return list
 }
 
+func (c *LogsView) listItemSelectedFunc(chkSuite CheckSuite, selected *github.CheckRun) func() {
+	return func() {
+		c.LogsCheckSuiteChan <- CheckSuite{
+			All:      chkSuite.All,
+			Selected: selected,
+		}
+	}
+}
+
 func checkRunStatus(check *github.CheckRun) string {
 	switch *check.Status {
 	case "completed":
@@ -71,4 +121,16 @@ func checkRunStatus(check *github.CheckRun) string {
 	default:
 		return *check.Status
 	}
+}
+
+func shouldShowLogs(check *github.CheckRun) bool {
+	switch *check.Status {
+	case "completed":
+		switch *check.Conclusion {
+		case "success", "failure":
+			return true
+		}
+	}
+
+	return false
 }
