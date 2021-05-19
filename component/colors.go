@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	bold = color.New(color.Bold)
+	bold  = color.New(color.Bold)
+	green = color.New(color.FgHiGreen)
+	red   = color.New(color.FgHiRed)
 
 	viewBackgroundColor = tcell.NewRGBColor(0, 43, 54)
 )

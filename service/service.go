@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/google/go-github/v35/github"
 )
@@ -17,26 +18,38 @@ import (
 type Service struct {
 	ctx          context.Context
 	client       *github.Client
+	pr           *github.PullRequest
 	workflowRuns []*github.WorkflowRun
 	homeDir      string
 	org          string
 	repo         string
-	pr           int
+	prNum        int
+	fetchChan    chan bool
 }
 
-func New(ctx context.Context, client *github.Client, org string, repo string, pr int) *Service {
+func New(ctx context.Context, client *github.Client, org string, repo string, prNum int) *Service {
 	dir, _ := os.UserHomeDir()
 	dir = filepath.Join(dir, ".gswt")
 	os.MkdirAll(filepath.Join(dir, "logs"), os.ModePerm)
 
-	return &Service{
-		ctx:     ctx,
-		client:  client,
-		homeDir: dir,
-		org:     org,
-		repo:    repo,
-		pr:      pr,
+	pr, _, err := client.PullRequests.Get(ctx, org, repo, prNum)
+	if err != nil {
+		// TODO: handle error better
+		panic(err)
 	}
+
+	svc := &Service{
+		ctx:       ctx,
+		client:    client,
+		homeDir:   dir,
+		org:       org,
+		repo:      repo,
+		prNum:     prNum,
+		pr:        pr,
+		fetchChan: make(chan bool, 1),
+	}
+	go svc.pullAllWorkflowRuns()
+	return svc
 }
 
 func (s *Service) Logs(checkRun *github.CheckRun) (string, error) {
@@ -46,10 +59,7 @@ func (s *Service) Logs(checkRun *github.CheckRun) (string, error) {
 		return path, nil
 	}
 
-	err = s.pullAllWorkflowRuns()
-	if err != nil {
-		return "", err
-	}
+	s.waitForWorkflows()
 
 	workFlowId, ok := s.pullWorkflowID(checkRun)
 	if !ok {
@@ -98,6 +108,23 @@ func download(url, filename string) error {
 	return err
 }
 
+func (s *Service) waitForWorkflows() {
+	if len(s.workflowRuns) > 0 {
+		return
+	}
+
+	timeout := time.After(5 * time.Second)
+
+	for {
+		select {
+		case <-timeout:
+			return
+		case <-s.fetchChan:
+			return
+		}
+	}
+}
+
 func (s *Service) pullWorkflowJobID(jobs *github.Jobs, checkRun *github.CheckRun) (int64, bool) {
 	for _, job := range jobs.Jobs {
 		checkRunID := strconv.FormatInt(checkRun.GetID(), 10)
@@ -121,11 +148,7 @@ func (s *Service) pullWorkflowID(checkRun *github.CheckRun) (int64, bool) {
 	return 0, false
 }
 
-func (s *Service) pullAllWorkflowRuns() error {
-	if len(s.workflowRuns) != 0 {
-		return nil
-	}
-
+func (s *Service) pullAllWorkflowRuns() {
 	var (
 		result []*github.WorkflowRun
 		page   = 1
@@ -133,16 +156,21 @@ func (s *Service) pullAllWorkflowRuns() error {
 
 	for {
 		runs, _, err := s.client.Actions.ListRepositoryWorkflowRuns(s.ctx, s.org, s.repo, &github.ListWorkflowRunsOptions{
+			Actor:       s.pr.GetUser().GetLogin(),
+			Branch:      s.pr.GetHead().GetRef(),
 			Event:       "pull_request",
+			Status:      "completed",
 			ListOptions: github.ListOptions{Page: page, PerPage: 100},
 		})
 		if err != nil {
-			return err
+			s.fetchChan <- true
+			return
 		}
 
 		if runs.GetTotalCount() == 0 {
 			s.workflowRuns = result
-			return nil
+			s.fetchChan <- true
+			return
 		}
 
 		result = append(result, runs.WorkflowRuns...)
@@ -156,7 +184,7 @@ func (s *Service) logPath(checkRun *github.CheckRun) string {
 }
 
 func (s *Service) Commits() ([]*github.RepositoryCommit, error) {
-	commits, _, err := s.client.PullRequests.ListCommits(s.ctx, s.org, s.repo, s.pr, nil)
+	commits, _, err := s.client.PullRequests.ListCommits(s.ctx, s.org, s.repo, s.prNum, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -169,17 +197,9 @@ func (s *Service) Commits() ([]*github.RepositoryCommit, error) {
 }
 
 func (s *Service) CheckRuns(ref ...string) (*github.ListCheckRunsResults, error) {
-	var r string
-
+	var r = s.pr.GetHead().GetSHA()
 	if len(ref) > 0 {
 		r = ref[0]
-	} else {
-		pr, _, err := s.client.PullRequests.Get(s.ctx, s.org, s.repo, s.pr)
-		if err != nil {
-			return nil, err
-		}
-
-		r = *pr.Head.SHA
 	}
 
 	checkRuns, _, err := s.client.Checks.ListCheckRunsForRef(s.ctx, s.org, s.repo, r, nil)

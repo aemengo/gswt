@@ -1,6 +1,7 @@
 package component
 
 import (
+	"github.com/aemengo/gswt/utils"
 	"github.com/gdamore/tcell/v2"
 	"github.com/google/go-github/v35/github"
 	"github.com/rivo/tview"
@@ -26,7 +27,7 @@ func (c *LogsView) Load(app *tview.Application, mode int, checks CheckSuite, log
 
 	flex := tview.NewFlex()
 
-	if !shouldShowLogs(checks.Selected) || mode == ModeChooseChecks {
+	if mode == ModeChooseChecks {
 		flex.AddItem(commitList, 0, 1, true)
 		flex.AddItem(logTxtView, 0, 2, false)
 	} else {
@@ -50,7 +51,7 @@ func (c *LogsView) buildLogs(checks CheckSuite, logsPath string) *tview.TextView
 		SetBorderAttributes(tcell.AttrBold).
 		SetBackgroundColor(viewBackgroundColor)
 
-	if shouldShowLogs(checks.Selected) {
+	if utils.ShouldShowLogs(checks.Selected) {
 		txtView.
 			SetText(tview.TranslateANSI(bold.Sprintln(logsPath))).
 			SetTextColor(tcell.ColorDarkGray)
@@ -115,22 +116,21 @@ func (c *LogsView) listItemSelectedFunc(chkSuite CheckSuite, selected *github.Ch
 }
 
 func checkRunStatus(check *github.CheckRun) string {
-	switch *check.Status {
+	switch check.GetStatus() {
 	case "completed":
-		return *check.Conclusion
+		return statusWithColor(check.GetConclusion())
 	default:
-		return *check.Status
+		return statusWithColor(check.GetStatus())
 	}
 }
 
-func shouldShowLogs(check *github.CheckRun) bool {
-	switch *check.Status {
-	case "completed":
-		switch *check.Conclusion {
-		case "success", "failure":
-			return true
-		}
+func statusWithColor(status string) string {
+	switch status {
+	case "success":
+		return tview.TranslateANSI(green.Sprint(status))
+	case "failure":
+		return tview.TranslateANSI(red.Sprint(status))
+	default:
+		return status
 	}
-
-	return false
 }

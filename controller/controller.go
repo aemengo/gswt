@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/aemengo/gswt/component"
 	"github.com/aemengo/gswt/service"
+	"github.com/aemengo/gswt/utils"
 	"github.com/google/go-github/v35/github"
 	"github.com/rivo/tview"
 )
@@ -46,6 +46,8 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns *github.ListCheckRunsResults) {
+	//TODO: handle these errors better
+
 	var (
 		chkSuite component.CheckSuite
 		logsPath string
@@ -54,20 +56,22 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 	for {
 		select {
 		case chkSuite = <-c.checksView.CheckSuiteChan:
-			var err error
-			logsPath, err = c.svc.Logs(chkSuite.Selected)
-			if err != nil {
-				fmt.Println("[DEBUG]", err)
-				continue
+			if utils.ShouldShowLogs(chkSuite.Selected) {
+				var err error
+				logsPath, err = c.svc.Logs(chkSuite.Selected)
+				if err != nil {
+					continue
+				}
 			}
 
 			c.logsView.Load(c.app, component.ModeParseLogs, chkSuite, logsPath)
 		case chkSuite = <-c.logsView.LogsCheckSuiteChan:
-			var err error
-			logsPath, err = c.svc.Logs(chkSuite.Selected)
-			if err != nil {
-				fmt.Println("[DEBUG]", err)
-				continue
+			if utils.ShouldShowLogs(chkSuite.Selected) {
+				var err error
+				logsPath, err = c.svc.Logs(chkSuite.Selected)
+				if err != nil {
+					continue
+				}
 			}
 
 			c.logsView.Load(c.app, component.ModeParseLogs, chkSuite, logsPath)
