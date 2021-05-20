@@ -28,7 +28,7 @@ func NewChecksView() *ChecksView {
 	}
 }
 
-func (c *ChecksView) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) error {
+func (c *ChecksView) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) {
 	commitList := c.buildCommitList(commits)
 	checkRunsTable := c.buildCheckRunsTable(checkRunsList)
 
@@ -43,7 +43,6 @@ func (c *ChecksView) Load(app *tview.Application, mode int, commits []*github.Re
 	}
 
 	app.SetRoot(flex, true)
-	return nil
 }
 
 func (c *ChecksView) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Table {

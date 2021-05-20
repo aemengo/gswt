@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"github.com/aemengo/gswt/controller"
 	"github.com/aemengo/gswt/service"
+	"github.com/aemengo/gswt/utils"
+	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -17,26 +20,26 @@ import (
 
 func main() {
 	token := os.Getenv("GITHUB_TOKEN")
-	if token == "" {
-		//goland:noinspection GoErrorStringFormat
-		expectNoError(errors.New("Missing required env var 'GITHUB_TOKEN'"))
-	}
-
-	if len(os.Args) != 3 {
-		expectNoError(errors.New("[USAGE] gswt <org/repo> <pr-number>"))
-	}
+	//goland:noinspection GoErrorStringFormat
+	expectNoError(errors.New("Missing required env var 'GITHUB_TOKEN'"), token == "")
+	expectNoError(errors.New("[USAGE] gswt <org/repo> <pr-number>"), len(os.Args) != 3)
 
 	arg1 := strings.Split(os.Args[1], "/")
-	if len(arg1) != 2 {
-		expectNoError(errors.New("[USAGE] gswt <org/repo> <pr-number>"))
-	}
+	expectNoError(errors.New("[USAGE] gswt <org/repo> <pr-number>"), len(arg1) != 2)
 
 	arg2 := os.Args[2]
-
 	prNum, err := strconv.Atoi(arg2)
-	if err != nil {
-		expectNoError(fmt.Errorf("failed to parse pr-number: %s: %s", arg2, err))
-	}
+	expectNoError(fmt.Errorf("failed to parse pr-number: %s: %s", arg2, err), err != nil)
+
+	dir, err := os.UserHomeDir()
+	expectNoError(err)
+
+	dir = filepath.Join(dir, ".gswt")
+	err = os.MkdirAll(utils.LogsDir(dir), os.ModePerm)
+	expectNoError(err)
+
+	f, err := os.OpenFile(filepath.Join(utils.LogsDir(dir), "gswt.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+	expectNoError(err)
 
 	var (
 		org  = arg1[0]
@@ -46,17 +49,31 @@ func main() {
 		ts     = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		tc     = oauth2.NewClient(ctx, ts)
 		client = github.NewClient(tc)
+		logger = log.New(f, "[GSWT] ", log.LstdFlags)
 
-		svc  = service.New(ctx, client, org, repo, prNum)
-		app  = tview.NewApplication()
-		ctrl = controller.New(svc, app)
+		app = tview.NewApplication()
 	)
 
+	svc, err := service.New(ctx, client, logger, dir, org, repo, prNum)
+	expectNoError(err)
+
+	ctrl := controller.New(svc, app, logger)
+
+	logger.Println("Starting...")
 	err = ctrl.Run()
 	expectNoError(err)
 }
 
-func expectNoError(err error) {
+func expectNoError(err error, cond ...bool) {
+	if len(cond) != 0 {
+		if cond[0] {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		return
+	}
+
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		os.Exit(1)

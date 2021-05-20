@@ -21,7 +21,7 @@ func NewLogsView() *LogsView {
 	}
 }
 
-func (c *LogsView) Load(app *tview.Application, mode int, checks CheckSuite, logsPath string) error {
+func (c *LogsView) Load(app *tview.Application, mode int, checks CheckSuite, logsPath string) {
 	commitList := c.buildChecksList(checks)
 	logTxtView := c.buildLogs(checks, logsPath)
 
@@ -36,7 +36,6 @@ func (c *LogsView) Load(app *tview.Application, mode int, checks CheckSuite, log
 	}
 
 	app.SetRoot(flex, true)
-	return nil
 }
 
 func (c *LogsView) buildLogs(checks CheckSuite, logsPath string) *tview.TextView {

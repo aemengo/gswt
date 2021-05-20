@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/aemengo/gswt/utils"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -20,6 +22,7 @@ type Service struct {
 	client       *github.Client
 	pr           *github.PullRequest
 	workflowRuns []*github.WorkflowRun
+	logger       *log.Logger
 	homeDir      string
 	org          string
 	repo         string
@@ -27,21 +30,17 @@ type Service struct {
 	fetchChan    chan bool
 }
 
-func New(ctx context.Context, client *github.Client, org string, repo string, prNum int) *Service {
-	dir, _ := os.UserHomeDir()
-	dir = filepath.Join(dir, ".gswt")
-	os.MkdirAll(filepath.Join(dir, "logs"), os.ModePerm)
-
+func New(ctx context.Context, client *github.Client, logger *log.Logger, homeDir string, org string, repo string, prNum int) (*Service, error) {
 	pr, _, err := client.PullRequests.Get(ctx, org, repo, prNum)
 	if err != nil {
-		// TODO: handle error better
-		panic(err)
+		return nil, err
 	}
 
 	svc := &Service{
 		ctx:       ctx,
 		client:    client,
-		homeDir:   dir,
+		logger:    logger,
+		homeDir:   homeDir,
 		org:       org,
 		repo:      repo,
 		prNum:     prNum,
@@ -49,7 +48,7 @@ func New(ctx context.Context, client *github.Client, org string, repo string, pr
 		fetchChan: make(chan bool, 1),
 	}
 	go svc.pullAllWorkflowRuns()
-	return svc
+	return svc, nil
 }
 
 func (s *Service) Logs(checkRun *github.CheckRun) (string, error) {
@@ -163,6 +162,7 @@ func (s *Service) pullAllWorkflowRuns() {
 			ListOptions: github.ListOptions{Page: page, PerPage: 100},
 		})
 		if err != nil {
+			s.logger.Println(err)
 			s.fetchChan <- true
 			return
 		}
@@ -180,7 +180,7 @@ func (s *Service) pullAllWorkflowRuns() {
 
 func (s *Service) logPath(checkRun *github.CheckRun) string {
 	filename := fmt.Sprintf("%d.log", checkRun.GetID())
-	return filepath.Join(s.homeDir, "logs", filename)
+	return filepath.Join(utils.LogsDir(s.homeDir), filename)
 }
 
 func (s *Service) Commits() ([]*github.RepositoryCommit, error) {

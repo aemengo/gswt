@@ -6,6 +6,7 @@ import (
 	"github.com/aemengo/gswt/utils"
 	"github.com/google/go-github/v35/github"
 	"github.com/rivo/tview"
+	"log"
 )
 
 type Controller struct {
@@ -13,12 +14,14 @@ type Controller struct {
 	app        *tview.Application
 	checksView *component.ChecksView
 	logsView   *component.LogsView
+	logger     *log.Logger
 }
 
-func New(svc *service.Service, app *tview.Application) *Controller {
+func New(svc *service.Service, app *tview.Application, logger *log.Logger) *Controller {
 	return &Controller{
 		svc:        svc,
 		app:        app,
+		logger:     logger,
 		checksView: component.NewChecksView(),
 		logsView:   component.NewLogsView(),
 	}
@@ -35,10 +38,7 @@ func (c *Controller) Run() error {
 		return err
 	}
 
-	err = c.checksView.Load(c.app, component.ModeChooseChecks, commits, checkRuns)
-	if err != nil {
-		return err
-	}
+	c.checksView.Load(c.app, component.ModeChooseChecks, commits, checkRuns)
 
 	go c.handleEvents(commits, checkRuns)
 
@@ -46,8 +46,6 @@ func (c *Controller) Run() error {
 }
 
 func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns *github.ListCheckRunsResults) {
-	//TODO: handle these errors better
-
 	var (
 		chkSuite component.CheckSuite
 		logsPath string
@@ -60,6 +58,7 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 				var err error
 				logsPath, err = c.svc.Logs(chkSuite.Selected)
 				if err != nil {
+					c.logger.Println(err)
 					continue
 				}
 			}
@@ -70,6 +69,7 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 				var err error
 				logsPath, err = c.svc.Logs(chkSuite.Selected)
 				if err != nil {
+					c.logger.Println(err)
 					continue
 				}
 			}
@@ -79,6 +79,7 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			var err error
 			checkRuns, err = c.svc.CheckRuns(sha)
 			if err != nil {
+				c.logger.Println(err)
 				continue
 			}
 
