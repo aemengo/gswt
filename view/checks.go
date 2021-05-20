@@ -1,6 +1,7 @@
-package component
+package view
 
 import (
+	"github.com/aemengo/gswt/model"
 	"github.com/dustin/go-humanize"
 	"github.com/gdamore/tcell/v2"
 	"github.com/google/go-github/v35/github"
@@ -9,26 +10,23 @@ import (
 	"strconv"
 )
 
-type CheckSuite struct {
-	All      []*github.CheckRun
-	Selected *github.CheckRun
-}
+type Checks struct {
+	CheckSuiteChan      chan model.CheckSuite
 
-type ChecksView struct {
-	CheckSuiteChan      chan CheckSuite
 	EscapeCheckListChan chan bool
 	SelectedCommitChan  chan string
 }
 
-func NewChecksView() *ChecksView {
-	return &ChecksView{
-		CheckSuiteChan:      make(chan CheckSuite),
+func NewChecks() *Checks {
+	return &Checks{
+		CheckSuiteChan:      make(chan model.CheckSuite),
+
 		EscapeCheckListChan: make(chan bool),
 		SelectedCommitChan:  make(chan string),
 	}
 }
 
-func (c *ChecksView) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) {
+func (c *Checks) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) {
 	commitList := c.buildCommitList(commits)
 	checkRunsTable := c.buildCheckRunsTable(checkRunsList)
 
@@ -45,7 +43,7 @@ func (c *ChecksView) Load(app *tview.Application, mode int, commits []*github.Re
 	app.SetRoot(flex, true)
 }
 
-func (c *ChecksView) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Table {
+func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Table {
 	style := tcell.StyleDefault.
 		Foreground(tcell.ColorMediumTurquoise).
 		Background(tcell.ColorDarkSlateGray).
@@ -132,7 +130,7 @@ func (c *ChecksView) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResu
 		SetSelectedFunc(func(row, column int) {
 			selected := checkRowMapping[row]
 
-			c.CheckSuiteChan <- CheckSuite{
+			c.CheckSuiteChan <- model.CheckSuite{
 				All:      matchesCheckSuite(checkRunsList, selected),
 				Selected: selected,
 			}
@@ -141,7 +139,7 @@ func (c *ChecksView) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResu
 	return table
 }
 
-func (c *ChecksView) buildCommitList(commits []*github.RepositoryCommit) *tview.List {
+func (c *Checks) buildCommitList(commits []*github.RepositoryCommit) *tview.List {
 	list := tview.NewList()
 	list.
 		SetMainTextColor(tcell.ColorMediumTurquoise).
@@ -173,14 +171,14 @@ func (c *ChecksView) buildCommitList(commits []*github.RepositoryCommit) *tview.
 	return list
 }
 
-func (c *ChecksView) listItemSelectedFunc(sha string) func() {
+func (c *Checks) listItemSelectedFunc(sha string) func() {
 	return func() {
 		c.SelectedCommitChan <- sha
 	}
 }
 
 func checkStatus(check *github.CheckRun) (string, tcell.Color) {
-	switch *check.Status {
+	switch check.GetStatus() {
 	case "completed":
 		switch *check.Conclusion {
 		case "success":
