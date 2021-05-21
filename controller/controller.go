@@ -54,6 +54,18 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 
 	for {
 		select {
+		// when commits are picked
+		case sha := <-c.checksView.SelectedCommitChan:
+			var err error
+			checkRuns, err = c.svc.CheckRuns(sha)
+			if err != nil {
+				c.logger.Println(err)
+				continue
+			}
+
+			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
+
+		// when checks are picked
 		case chkSuite = <-c.checksView.CheckSuiteChan:
 			if utils.ShouldShowLogs(chkSuite.Selected) {
 				var err error
@@ -76,15 +88,10 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			}
 
 			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs)
-		case sha := <-c.checksView.SelectedCommitChan:
-			var err error
-			checkRuns, err = c.svc.CheckRuns(sha)
-			if err != nil {
-				c.logger.Println(err)
-				continue
-			}
 
-			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
+		// when logs are toggled
+		case stepID := <-c.logsView.SelectedStepChan:
+			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, stepID)
 
 		// when ESC is pressed
 		case <-c.logsView.EscapeLogsTextViewChan:

@@ -11,7 +11,7 @@ import (
 )
 
 type Checks struct {
-	CheckSuiteChan      chan model.CheckSuite
+	CheckSuiteChan chan model.CheckSuite
 
 	EscapeCheckListChan chan bool
 	SelectedCommitChan  chan string
@@ -19,7 +19,7 @@ type Checks struct {
 
 func NewChecks() *Checks {
 	return &Checks{
-		CheckSuiteChan:      make(chan model.CheckSuite),
+		CheckSuiteChan: make(chan model.CheckSuite),
 
 		EscapeCheckListChan: make(chan bool),
 		SelectedCommitChan:  make(chan string),
@@ -182,7 +182,7 @@ func checkStatus(check *github.CheckRun) (string, tcell.Color) {
 	case "completed":
 		switch *check.Conclusion {
 		case "success":
-			return "✔", tcell.ColorForestGreen
+			return "✔︎", tcell.ColorForestGreen
 		case "skipped":
 			return "•", tcell.ColorGray
 		default:

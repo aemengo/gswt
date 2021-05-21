@@ -9,6 +9,7 @@ import (
 type Logs []Step
 
 type Step struct {
+	ID       int
 	Title    string
 	Selected bool
 	Success  bool
@@ -18,23 +19,29 @@ type Step struct {
 }
 
 func LogsFromFile(logPath string) (Logs, error) {
-	file, err := os.Open(logPath)
+	f, err := os.Open(logPath)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer f.Close()
 
 	var (
 		logs           Logs
 		shouldCollect  *bool
-		scanner        = bufio.NewScanner(file)
+		id             = 1
+		scanner        = bufio.NewScanner(f)
 		headerBeginTxt = "##[group]Run "
 		headerEndTxt   = "##[endgroup]"
 		errorTxt       = "##[error]Process completed with exit code"
+		postRunTxt     = "Post job cleanup."
 	)
 
 	for scanner.Scan() {
 		args := strings.SplitN(scanner.Text(), " ", 2)
+
+		if len(args) != 2 {
+			continue
+		}
 
 		//timestamp is args[0]
 		txt := args[1]
@@ -44,15 +51,17 @@ func LogsFromFile(logPath string) (Logs, error) {
 
 			if len(logs) != 0 {
 				if len(logs[len(logs)-1].Lines) == 0 {
-					logs[len(logs)-1].Lines = append(logs[len(logs)-1].Lines, "-")
+					logs[len(logs)-1].Lines = append(logs[len(logs)-1].Lines, "✔︎")
 				}
 			}
 
 			logs = append(logs, Step{
+				ID:      id,
 				Title:   strings.TrimPrefix(txt, "##[group]"),
 				Success: true,
 			})
 
+			id = id + 1
 			continue
 		}
 
@@ -60,6 +69,11 @@ func LogsFromFile(logPath string) (Logs, error) {
 			if shouldCollect != nil && !*shouldCollect {
 				shouldCollect = bPtr(true)
 			}
+			continue
+		}
+
+		if txt == postRunTxt {
+			shouldCollect = bPtr(false)
 			continue
 		}
 
@@ -80,6 +94,16 @@ func LogsFromFile(logPath string) (Logs, error) {
 	}
 
 	return logs, nil
+}
+
+func (l Logs) Toggle(id int) {
+	for i := range l {
+		if l[i].ID == id {
+			l[i].Selected = !l[i].Selected
+		} else {
+			l[i].Selected = false
+		}
+	}
 }
 
 func bPtr(b bool) *bool {

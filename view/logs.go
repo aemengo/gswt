@@ -11,6 +11,7 @@ import (
 type Logs struct {
 	LogsCheckSuiteChan chan model.CheckSuite
 
+	SelectedStepChan       chan int
 	EscapeLogs             chan bool
 	EscapeLogsTextViewChan chan bool
 }
@@ -19,14 +20,15 @@ func NewLogs() *Logs {
 	return &Logs{
 		LogsCheckSuiteChan: make(chan model.CheckSuite),
 
+		SelectedStepChan:       make(chan int),
 		EscapeLogs:             make(chan bool),
 		EscapeLogsTextViewChan: make(chan bool),
 	}
 }
 
-func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, logs model.Logs) {
+func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, logs model.Logs, selectedIDs ...int) {
 	commitList := c.buildTasksList(checks)
-	logsDetail := c.buildLogs(checks, logs)
+	logsDetail := c.buildLogs(checks, logs, selectedIDs)
 
 	flex := tview.NewFlex()
 
@@ -41,13 +43,18 @@ func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, l
 	app.SetRoot(flex, true)
 }
 
-func (c *Logs) buildLogs(checks model.CheckSuite, logs model.Logs) tview.Primitive {
+func (c *Logs) buildLogs(checks model.CheckSuite, logs model.Logs, selectedIDs []int) tview.Primitive {
 	escHandler := func(key tcell.Key) {
 		c.EscapeLogsTextViewChan <- true
 	}
 
+	selectedHandler := func(id int) {
+		logs.Toggle(id)
+		c.SelectedStepChan <- id
+	}
+
 	if utils.ShouldShowLogs(checks.Selected) {
-		return logsDetailView(logs, escHandler)
+		return logsDetailView(logs, selectedIDs, escHandler, selectedHandler)
 	} else {
 		txtView := tview.NewTextView()
 		txtView.
@@ -117,7 +124,7 @@ func checkRunStatus(check *github.CheckRun) string {
 	case "completed":
 		switch check.GetConclusion() {
 		case "success":
-			return tview.TranslateANSI(green.Sprint("✔ ")) + check.GetConclusion()
+			return tview.TranslateANSI(green.Sprint("✔︎ ")) + check.GetConclusion()
 		case "skipped":
 			return "• " + check.GetConclusion()
 		default:
