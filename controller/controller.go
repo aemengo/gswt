@@ -90,8 +90,9 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs)
 
 		// when logs are toggled
-		case stepID := <-c.logsView.SelectedStepChan:
-			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, stepID)
+		case id := <-c.logsView.SelectedStepChan:
+			logs.Toggle(id)
+			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, id)
 
 		// when ESC is pressed
 		case <-c.logsView.EscapeLogsTextViewChan:

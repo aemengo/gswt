@@ -49,12 +49,11 @@ func (c *Logs) buildLogs(checks model.CheckSuite, logs model.Logs, selectedIDs [
 	}
 
 	selectedHandler := func(id int) {
-		logs.Toggle(id)
 		c.SelectedStepChan <- id
 	}
 
 	if utils.ShouldShowLogs(checks.Selected) {
-		return logsDetailView(logs, selectedIDs, escHandler, selectedHandler)
+		return logsDetailView(logs, escHandler, selectedHandler, selectedIDs)
 	} else {
 		txtView := tview.NewTextView()
 		txtView.
