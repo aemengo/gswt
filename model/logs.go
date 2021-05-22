@@ -2,7 +2,9 @@ package model
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -15,7 +17,13 @@ type Step struct {
 	Success  bool
 	Lines    []string
 
-	//TODO: do something different about test logs
+	TestSuites []TestSuite
+}
+
+type TestSuite struct {
+	ID       int
+	Title    string
+	Selected bool
 }
 
 func LogsFromFile(logPath string) (Logs, error) {
@@ -48,12 +56,6 @@ func LogsFromFile(logPath string) (Logs, error) {
 
 		if strings.HasPrefix(txt, headerBeginTxt) {
 			shouldCollect = bPtr(false)
-
-			if len(logs) != 0 {
-				if len(logs[len(logs)-1].Lines) == 0 {
-					logs[len(logs)-1].Lines = append(logs[len(logs)-1].Lines, "✔︎")
-				}
-			}
 
 			logs = append(logs, Step{
 				ID:      id,
@@ -93,7 +95,39 @@ func LogsFromFile(logPath string) (Logs, error) {
 		return nil, err
 	}
 
+	for i := range logs {
+		parseGoTest(&logs[i], &id)
+	}
+
 	return logs, nil
+}
+
+func parseGoTest(step *Step, id *int) {
+	var (
+		//shouldCollect *bool
+		suiteMatcher = regexp.MustCompile(`^Suite: .+$`)
+		tallyMatcher = regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`)
+	)
+
+	for _, line := range step.Lines {
+		if suiteMatcher.MatchString(line) {
+			//shouldCollect = bPtr(true)
+
+			step.TestSuites = append(step.TestSuites, TestSuite{
+				ID:    *id,
+				Title: line,
+			})
+
+			*id = *id + 1
+			continue
+		}
+
+		if tallyMatcher.MatchString(line) {
+			step.TestSuites[len(step.TestSuites)-1].Title = step.TestSuites[len(step.TestSuites)-1].Title + fmt.Sprintf(" (%s)", line)
+			continue
+		}
+	}
+
 }
 
 func (l Logs) Toggle(id int) {
@@ -104,6 +138,22 @@ func (l Logs) Toggle(id int) {
 			l[i].Selected = false
 		}
 	}
+}
+
+func (s *Step) IsTest() bool {
+	return len(s.TestSuites) != 0
+}
+
+func (s *Step) FailedTestSuites() []TestSuite {
+	var ts []TestSuite
+
+	for _, suite := range s.TestSuites {
+		if !strings.Contains(suite.Title, "Failed: 0") {
+			ts = append(ts, suite)
+		}
+	}
+
+	return ts
 }
 
 func bPtr(b bool) *bool {
