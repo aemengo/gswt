@@ -111,12 +111,14 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 	goFileRegex := regexp.MustCompile(`(\S+\.go:\d+:)`)
 	errRegex := regexp.MustCompile(`(?i)^\s+error:`)
 
-	for _, line := range run.Lines {
+	for i, line := range run.Lines {
 
 		txt := tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))
 
-		if errRegex.MatchString(txt) {
-			txt = "[red]"+txt
+		if i == len(run.Lines)-1 {
+			if errRegex.MatchString(txt) {
+				txt = "[red]" + txt
+			}
 		}
 
 		table.SetCell(*row, 0,
