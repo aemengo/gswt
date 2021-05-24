@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), selectedIDs []int) *tview.Table {
+func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectedIDs []int) *tview.Table {
 	style := tcell.StyleDefault.
 		Foreground(tcell.ColorMediumTurquoise).
 		Background(tcell.ColorDarkSlateGray).
@@ -48,7 +48,7 @@ func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHan
 	table.
 		SetSelectable(true, false).
 		SetDoneFunc(escHandler).
-		SetSelectedFunc(rowSelectedFunc(rowIDMapping, selectedHandler))
+		SetSelectedFunc(rowSelectedFunc(rowIDMapping, selectedHandler, enterHandler))
 
 	if len(selectedIDs) != 0 {
 		id := selectedIDs[0]
@@ -109,14 +109,22 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 	}
 
 	goFileRegex := regexp.MustCompile(`(\S+\.go:\d+:)`)
+	errRegex := regexp.MustCompile(`(?i)^\s+error:`)
 
 	for _, line := range run.Lines {
+
+		txt := tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))
+
+		if errRegex.MatchString(txt) {
+			txt = "[red]"+txt
+		}
+
 		table.SetCell(*row, 0,
 			tview.NewTableCell("").
 				SetSelectable(false))
 
 		table.SetCell(*row, 1,
-			tview.NewTableCell("        "+tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))).
+			tview.NewTableCell("        "+txt).
 				SetTextColor(tcell.ColorDarkGray).
 				SetSelectable(true))
 
@@ -234,12 +242,15 @@ func showLogLines(table *tview.Table, step model.Step, row *int) {
 	}
 }
 
-func rowSelectedFunc(rowIDMapping map[int]int, selectedHandler func(id int)) func(row, column int) {
+func rowSelectedFunc(rowIDMapping map[int]int, selectedHandler func(id int), enterHandler func()) func(row, column int) {
 	return func(row, column int) {
 		id, ok := rowIDMapping[row]
 		if ok {
 			selectedHandler(id)
+			return
 		}
+
+		enterHandler()
 	}
 }
 

@@ -8,34 +8,44 @@ import (
 	"github.com/rivo/tview"
 )
 
+type ToggleInfo struct {
+	Mode int
+	Row  int
+}
+
 type Logs struct {
 	LogsCheckSuiteChan chan model.CheckSuite
 
-	SelectedStepChan       chan int
-	EscapeLogs             chan bool
-	EscapeLogsTextViewChan chan bool
+	SelectedStepChan     chan int
+	ToggleModeChan       chan int
+	EscapeLogsChan       chan bool
+	EscapeLogsDetailChan chan bool
 }
 
 func NewLogs() *Logs {
 	return &Logs{
 		LogsCheckSuiteChan: make(chan model.CheckSuite),
 
-		SelectedStepChan:       make(chan int),
-		EscapeLogs:             make(chan bool),
-		EscapeLogsTextViewChan: make(chan bool),
+		SelectedStepChan:     make(chan int),
+		ToggleModeChan:       make(chan int),
+		EscapeLogsChan:       make(chan bool),
+		EscapeLogsDetailChan: make(chan bool),
 	}
 }
 
 func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, logs model.Logs, selectedIDs ...int) {
 	commitList := c.buildTasksList(checks)
-	logsDetail := c.buildLogs(checks, logs, selectedIDs)
+	logsDetail := c.buildLogs(mode, checks, logs, selectedIDs)
 
 	flex := tview.NewFlex()
 
-	if mode == ModeChooseChecks {
+	switch mode {
+	case ModeChooseChecks:
 		flex.AddItem(commitList, 0, 1, true)
 		flex.AddItem(logsDetail, 0, 4, false)
-	} else {
+	case ModeParseLogsFullScreen:
+		flex.AddItem(logsDetail, 0, 1, true)
+	default:
 		flex.AddItem(commitList, 0, 1, false)
 		flex.AddItem(logsDetail, 0, 4, true)
 	}
@@ -43,17 +53,21 @@ func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, l
 	app.SetRoot(flex, true)
 }
 
-func (c *Logs) buildLogs(checks model.CheckSuite, logs model.Logs, selectedIDs []int) tview.Primitive {
+func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, selectedIDs []int) tview.Primitive {
 	escHandler := func(key tcell.Key) {
-		c.EscapeLogsTextViewChan <- true
+		c.EscapeLogsDetailChan <- true
 	}
 
 	selectedHandler := func(id int) {
 		c.SelectedStepChan <- id
 	}
 
+	enterHandler := func() {
+		c.ToggleModeChan <- mode
+	}
+
 	if utils.ShouldShowLogs(checks.Selected) {
-		return logsDetailView(logs, escHandler, selectedHandler, selectedIDs)
+		return logsDetailView(logs, escHandler, selectedHandler, enterHandler, selectedIDs)
 	} else {
 		txtView := tview.NewTextView()
 		txtView.
@@ -104,7 +118,7 @@ func (c *Logs) buildTasksList(checks model.CheckSuite) *tview.List {
 	list.
 		SetCurrentItem(selectedIndex).
 		SetDoneFunc(func() {
-			c.EscapeLogs <- true
+			c.EscapeLogsChan <- true
 		})
 	return list
 }
