@@ -27,7 +27,9 @@ type Service struct {
 	org          string
 	repo         string
 	prNum        int
-	fetchChan    chan bool
+
+	FetchChan chan bool
+	fetchChan chan bool
 }
 
 func New(ctx context.Context, client *github.Client, logger *log.Logger, homeDir string, org string, repo string, prNum int) (*Service, error) {
@@ -46,6 +48,7 @@ func New(ctx context.Context, client *github.Client, logger *log.Logger, homeDir
 		prNum:     prNum,
 		pr:        pr,
 		fetchChan: make(chan bool, 1),
+		FetchChan: make(chan bool, 1),
 	}
 	go svc.pullAllWorkflowRuns()
 	return svc, nil
@@ -164,12 +167,14 @@ func (s *Service) pullAllWorkflowRuns() {
 		if err != nil {
 			s.logger.Println(err)
 			s.fetchChan <- true
+			s.FetchChan <- true
 			return
 		}
 
 		if runs.GetTotalCount() == 0 {
 			s.workflowRuns = result
 			s.fetchChan <- true
+			s.FetchChan <- true
 			return
 		}
 
@@ -208,4 +213,9 @@ func (s *Service) CheckRuns(ref ...string) (*github.ListCheckRunsResults, error)
 	}
 
 	return checkRuns, nil
+}
+
+func (s *Service) HasDataFor(run *github.CheckRun) bool {
+	_, ok := s.pullWorkflowID(run)
+	return ok
 }

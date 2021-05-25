@@ -2,6 +2,7 @@ package view
 
 import (
 	"github.com/aemengo/gswt/model"
+	"github.com/aemengo/gswt/service"
 	"github.com/dustin/go-humanize"
 	"github.com/gdamore/tcell/v2"
 	"github.com/google/go-github/v35/github"
@@ -11,14 +12,18 @@ import (
 )
 
 type Checks struct {
+	svc *service.Service
+
 	CheckSuiteChan chan model.CheckSuite
 
 	EscapeCheckListChan chan bool
 	SelectedCommitChan  chan string
 }
 
-func NewChecks() *Checks {
+func NewChecks(svc *service.Service) *Checks {
 	return &Checks{
+		svc: svc,
+
 		CheckSuiteChan: make(chan model.CheckSuite),
 
 		EscapeCheckListChan: make(chan bool),
@@ -106,6 +111,13 @@ func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults)
 		}
 
 		status, color := checkStatus(checkRun)
+		runTextColor := tcell.ColorDarkGray
+		runSelectable := false
+
+		if c.svc.HasDataFor(checkRun) {
+			runTextColor = tcell.ColorMediumTurquoise
+			runSelectable = true
+		}
 
 		table.SetCell(row, 0,
 			tview.NewTableCell(status).
@@ -114,9 +126,9 @@ func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults)
 
 		table.SetCell(row, 1,
 			tview.NewTableCell(*checkRun.Name).
-				SetTextColor(tcell.ColorMediumTurquoise).
+				SetTextColor(runTextColor).
 				SetAttributes(tcell.AttrBold).
-				SetSelectable(true))
+				SetSelectable(runSelectable))
 
 		checkRowMapping[row] = checkRun
 		row = row + 1

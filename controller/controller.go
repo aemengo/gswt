@@ -23,7 +23,7 @@ func New(svc *service.Service, app *tview.Application, logger *log.Logger) *Cont
 		svc:        svc,
 		app:        app,
 		logger:     logger,
-		checksView: view.NewChecks(),
+		checksView: view.NewChecks(svc),
 		logsView:   view.NewLogs(),
 	}
 }
@@ -56,6 +56,10 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 
 	for {
 		select {
+		// when workflows are done loading
+		case <-c.svc.FetchChan:
+			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
+
 		// when commits are picked
 		case sha := <-c.checksView.SelectedCommitChan:
 			var err error
