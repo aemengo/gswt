@@ -31,8 +31,8 @@ func NewChecks(svc *service.Service) *Checks {
 	}
 }
 
-func (c *Checks) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults) {
-	commitList := c.buildCommitList(commits)
+func (c *Checks) Load(app *tview.Application, mode int, commits []*github.RepositoryCommit, checkRunsList *github.ListCheckRunsResults, selectedCommits ...string) {
+	commitList := c.buildCommitList(commits, selectedCommits...)
 	checkRunsTable := c.buildCheckRunsTable(checkRunsList)
 
 	flex := tview.NewFlex()
@@ -151,7 +151,7 @@ func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults)
 	return table
 }
 
-func (c *Checks) buildCommitList(commits []*github.RepositoryCommit) *tview.List {
+func (c *Checks) buildCommitList(commits []*github.RepositoryCommit, selectedCommits ...string) *tview.List {
 	list := tview.NewList()
 	list.
 		SetMainTextColor(tcell.ColorMediumTurquoise).
@@ -171,13 +171,22 @@ func (c *Checks) buildCommitList(commits []*github.RepositoryCommit) *tview.List
 		return commits[i].Commit.Committer.Date.After(*commits[j].Commit.Committer.Date)
 	})
 
-	for _, commit := range commits {
+	selectedIndex := 0
+	for i, commit := range commits {
+		if len(selectedCommits) != 0 && selectedCommits[0] == commit.GetSHA() {
+			selectedIndex = i
+		}
+
 		list.AddItem(
-			*commit.SHA,
-			humanize.Time(*commit.Commit.Committer.Date),
+			commit.GetSHA(),
+			humanize.Time(commit.GetCommit().GetCommitter().GetDate()),
 			0,
-			c.listItemSelectedFunc(*commit.SHA),
+			c.listItemSelectedFunc(commit.GetSHA()),
 		)
+	}
+
+	if len(commits) != 0 {
+		list.SetCurrentItem(selectedIndex)
 	}
 
 	return list

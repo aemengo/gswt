@@ -48,10 +48,12 @@ func (c *Controller) Run() error {
 
 func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns *github.ListCheckRunsResults) {
 	var (
-		chkSuite model.CheckSuite
-		logs     model.Logs
-		logID    int
-		logMode  = view.ModeParseLogs
+		chkSuite  model.CheckSuite
+		commitSHA string
+
+		logs    model.Logs
+		logID   int
+		logMode = view.ModeParseLogs
 	)
 
 	for {
@@ -61,15 +63,15 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
 
 		// when commits are picked
-		case sha := <-c.checksView.SelectedCommitChan:
+		case commitSHA = <-c.checksView.SelectedCommitChan:
 			var err error
-			checkRuns, err = c.svc.CheckRuns(sha)
+			checkRuns, err = c.svc.CheckRuns(commitSHA)
 			if err != nil {
 				c.logger.Println(err)
 				continue
 			}
 
-			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
+			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
 
 		// when checks are picked
 		case chkSuite = <-c.checksView.CheckSuiteChan:
@@ -114,9 +116,9 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			logMode = view.ModeParseLogs
 			c.logsView.Load(c.app, view.ModeChooseChecks, chkSuite, logs)
 		case <-c.checksView.EscapeCheckListChan:
-			c.checksView.Load(c.app, view.ModeChooseCommits, commits, checkRuns)
+			c.checksView.Load(c.app, view.ModeChooseCommits, commits, checkRuns, commitSHA)
 		case <-c.logsView.EscapeLogsChan:
-			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
+			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
 		}
 
 		c.app.Draw()

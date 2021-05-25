@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectedIDs []int) *tview.Table {
+func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectedIDs ...int) *tview.Table {
 	style := tcell.StyleDefault.
 		Foreground(tcell.ColorMediumTurquoise).
 		Background(tcell.ColorDarkSlateGray).

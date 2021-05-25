@@ -8,11 +8,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-type ToggleInfo struct {
-	Mode int
-	Row  int
-}
-
 type Logs struct {
 	LogsCheckSuiteChan chan model.CheckSuite
 
@@ -35,7 +30,7 @@ func NewLogs() *Logs {
 
 func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, logs model.Logs, selectedIDs ...int) {
 	commitList := c.buildTasksList(checks)
-	logsDetail := c.buildLogs(mode, checks, logs, selectedIDs)
+	logsDetail := c.buildLogs(mode, checks, logs, selectedIDs...)
 
 	flex := tview.NewFlex()
 
@@ -53,7 +48,7 @@ func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, l
 	app.SetRoot(flex, true)
 }
 
-func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, selectedIDs []int) tview.Primitive {
+func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, selectedIDs ...int) tview.Primitive {
 	escHandler := func(key tcell.Key) {
 		c.EscapeLogsDetailChan <- true
 	}
@@ -67,7 +62,7 @@ func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, sel
 	}
 
 	if utils.ShouldShowLogs(checks.Selected) {
-		return logsDetailView(logs, escHandler, selectedHandler, enterHandler, selectedIDs)
+		return logsDetailView(logs, escHandler, selectedHandler, enterHandler, selectedIDs...)
 	} else {
 		txtView := tview.NewTextView()
 		txtView.
