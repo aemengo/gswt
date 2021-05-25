@@ -119,6 +119,7 @@ func parseGoTest(step *Step, id *int) {
 		tallyMatcher  = regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`)
 		runMatcher    = regexp.MustCompile(`^=== RUN\s+(\S+)$`)
 		actionMatcher = regexp.MustCompile(`^=== [A-Z]+\s+(\S+)$`)
+		reportMatcher = regexp.MustCompile(`^--- [A-Z]+: (\S+) \(.+$`)
 		failedMatcher = regexp.MustCompile(`^\s*--- FAIL: (\S+) \(.+$`)
 
 		runIndexMapping  = map[string]int{}
@@ -156,9 +157,6 @@ func parseGoTest(step *Step, id *int) {
 
 		if tallyMatcher.MatchString(line) {
 			step.TestSuites[len(step.TestSuites)-1].Title = step.TestSuites[len(step.TestSuites)-1].Title + fmt.Sprintf(" (%s)", line)
-
-			currentTestSuite = ""
-			currentTestRun = ""
 			continue
 		}
 
@@ -193,6 +191,11 @@ func parseGoTest(step *Step, id *int) {
 
 			currentTestRun = actionMatches[1]
 			continue
+		}
+
+		if reportMatcher.MatchString(line) {
+			currentTestSuite = ""
+			currentTestRun = ""
 		}
 
 		failureMatches := failedMatcher.FindStringSubmatch(line)
