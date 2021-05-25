@@ -141,6 +141,9 @@ func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults)
 		}).
 		SetSelectedFunc(func(row, column int) {
 			selected := checkRowMapping[row]
+			if selected == nil {
+				return
+			}
 
 			c.CheckSuiteChan <- model.CheckSuite{
 				All:      matchesCheckSuite(checkRunsList, selected),
@@ -217,7 +220,7 @@ func checkStatus(check *github.CheckRun) (string, tcell.Color) {
 func matchesCheckSuite(checkRunsList *github.ListCheckRunsResults, selected *github.CheckRun) []*github.CheckRun {
 	var result []*github.CheckRun
 	for _, item := range checkRunsList.CheckRuns {
-		if *item.CheckSuite.ID == *selected.CheckSuite.ID {
+		if item.GetCheckSuite().GetID() == selected.GetCheckSuite().GetID() {
 			result = append(result, item)
 		}
 	}
