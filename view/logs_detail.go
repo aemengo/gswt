@@ -80,7 +80,7 @@ func showTitleLine(table *tview.Table, step model.Step, index int, row *int, row
 		icon = " ▼ "
 	}
 
-	txt := cyan.Sprintf("Step %d: %s", index, truncate(step.Title))
+	txt := cyan.Sprintf("Step %d: %s", index+1, truncate(step.Title))
 
 	table.SetCell(*row, 1,
 		tview.NewTableCell(icon+tview.TranslateANSI(txt)).
