@@ -220,6 +220,12 @@ func parseGoTest(step *Step, id *int) {
 
 			i, ok := runIndexMapping[currentTestRun]
 			if ok {
+				// throw away blank first lines
+				testRunLogCount := len(step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines)
+				if strings.TrimSpace(line) == "" && testRunLogCount == 0 {
+					continue
+				}
+
 				step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines = append(step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines, line)
 			}
 		}
