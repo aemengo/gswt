@@ -204,7 +204,9 @@ func parseGoTest(step *Step, id *int) {
 
 			i, ok := runIndexMapping[testRun]
 			if ok {
-				step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Success = false
+				if len(step.TestSuites) != 0 {
+					step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Success = false
+				}
 			}
 
 			continue
