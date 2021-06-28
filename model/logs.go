@@ -2,9 +2,7 @@ package model
 
 import (
 	"bufio"
-	"fmt"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -107,129 +105,10 @@ func LogsFromFile(logPath string) (Logs, error) {
 	}
 
 	for i := range logs {
-		parseGoTest(&logs[i], &id)
+		NewParser(&id).ParseGoTestStep(&logs[i])
 	}
 
 	return logs, nil
-}
-
-func parseGoTest(step *Step, id *int) {
-	var (
-		suiteMatcher  = regexp.MustCompile(`^Suite: .+$`)
-		tallyMatcher  = regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`)
-		runMatcher    = regexp.MustCompile(`^=== RUN\s+(\S+)$`)
-		actionMatcher = regexp.MustCompile(`^=== [A-Z]+\s+(\S+)$`)
-		reportMatcher = regexp.MustCompile(`^--- [A-Z]+: (\S+) \(.+$`)
-		failedMatcher = regexp.MustCompile(`^\s*--- FAIL: (\S+) \(.+$`)
-
-		runIndexMapping  = map[string]int{}
-		currentTestSuite = ""
-		currentTestRun   = ""
-
-		// workaround to capture main text before loaded
-		mainTestRunName = ""
-		mainTestLines   []string
-	)
-
-	for _, line := range step.Lines {
-		if suiteMatcher.MatchString(line) {
-			step.TestSuites = append(step.TestSuites, TestSuite{
-				ID:    *id,
-				Title: line,
-
-				// placeholder for main TestRun
-				TestRuns: []TestRun{
-					{
-						ID:      *id + 1,
-						Name:    mainTestRunName,
-						Lines:   mainTestLines,
-						Success: true,
-					},
-				},
-			})
-
-			*id = *id + 2
-
-			currentTestSuite = line
-			currentTestRun = ""
-			continue
-		}
-
-		if tallyMatcher.MatchString(line) {
-			step.TestSuites[len(step.TestSuites)-1].Title = step.TestSuites[len(step.TestSuites)-1].Title + fmt.Sprintf(" (%s)", line)
-			continue
-		}
-
-		matches := runMatcher.FindStringSubmatch(line)
-		if len(matches) == 2 {
-			currentTestRun = matches[1]
-
-			if currentTestSuite == "" {
-				mainTestRunName = currentTestRun
-				mainTestLines = []string{}
-				runIndexMapping[currentTestRun] = 0
-				continue
-			}
-
-			step.TestSuites[len(step.TestSuites)-1].TestRuns = append(step.TestSuites[len(step.TestSuites)-1].TestRuns, TestRun{
-				ID:      *id,
-				Name:    currentTestRun,
-				Success: true,
-			})
-
-			*id = *id + 1
-
-			runIndexMapping[currentTestRun] = len(step.TestSuites[len(step.TestSuites)-1].TestRuns) - 1
-			continue
-		}
-
-		actionMatches := actionMatcher.FindStringSubmatch(line)
-		if len(actionMatches) == 2 {
-			if currentTestSuite == "" {
-				continue
-			}
-
-			currentTestRun = actionMatches[1]
-			continue
-		}
-
-		if reportMatcher.MatchString(line) {
-			currentTestSuite = ""
-			currentTestRun = ""
-		}
-
-		failureMatches := failedMatcher.FindStringSubmatch(line)
-		if len(failureMatches) == 2 {
-			testRun := failureMatches[1]
-
-			i, ok := runIndexMapping[testRun]
-			if ok {
-				if len(step.TestSuites) != 0 {
-					step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Success = false
-				}
-			}
-
-			continue
-		}
-
-		if currentTestRun != "" {
-			if currentTestSuite == "" {
-				mainTestLines = append(mainTestLines, line)
-				continue
-			}
-
-			i, ok := runIndexMapping[currentTestRun]
-			if ok {
-				// throw away blank first lines
-				testRunLogCount := len(step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines)
-				if strings.TrimSpace(line) == "" && testRunLogCount == 0 {
-					continue
-				}
-
-				step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines = append(step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines, line)
-			}
-		}
-	}
 }
 
 func (l Logs) toggleTestRuns(id int) bool {
