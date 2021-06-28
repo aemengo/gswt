@@ -5,4 +5,6 @@ const (
 	ModeChooseChecks
 	ModeParseLogs
 	ModeParseLogsFullScreen
+	ModeParseTestsRunning
+	ModeParseTestsFinished
 )

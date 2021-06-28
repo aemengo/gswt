@@ -49,7 +49,7 @@ func main() {
 		ts     = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		tc     = oauth2.NewClient(ctx, ts)
 		client = github.NewClient(tc)
-		logger = log.New(f, "[GSWT] ", log.LstdFlags)
+		logger = log.New(f, "[GH-SWT] ", log.LstdFlags)
 
 		app = tview.NewApplication()
 	)

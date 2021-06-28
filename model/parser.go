@@ -1,7 +1,9 @@
 package model
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 )
@@ -14,7 +16,6 @@ type Parser struct {
 	reportMatcher *regexp.Regexp
 	failedMatcher *regexp.Regexp
 
-	id               *int
 	runIndexMapping  map[string]int
 	currentTestSuite string
 	currentTestRun   string
@@ -22,37 +23,56 @@ type Parser struct {
 	// workaround to capture main text before loaded
 	mainTestRunName string
 	mainTestLines   []string
+
+	doneChan        chan bool
+	stepUpdatedChan chan bool
 }
 
-func NewParser(id *int) *Parser {
+func NewParser(stepUpdatedChan chan bool, doneChan chan bool) *Parser {
 	return &Parser{
-		id:              id,
 		runIndexMapping: map[string]int{},
-		suiteMatcher:    regexp.MustCompile(`^Suite: .+$`),
-		tallyMatcher:    regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`),
-		runMatcher:      regexp.MustCompile(`^=== RUN\s+(\S+)$`),
-		actionMatcher:   regexp.MustCompile(`^=== [A-Z]+\s+(\S+)$`),
-		reportMatcher:   regexp.MustCompile(`^--- [A-Z]+: (\S+) \(.+$`),
-		failedMatcher:   regexp.MustCompile(`^\s*--- FAIL: (\S+) \(.+$`),
+		stepUpdatedChan: stepUpdatedChan,
+		doneChan:        doneChan,
+
+		suiteMatcher:  regexp.MustCompile(`^Suite: .+$`),
+		tallyMatcher:  regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`),
+		runMatcher:    regexp.MustCompile(`^=== RUN\s+(\S+)$`),
+		actionMatcher: regexp.MustCompile(`^=== [A-Z]+\s+(\S+)$`),
+		reportMatcher: regexp.MustCompile(`^--- [A-Z]+: (\S+) \(.+$`),
+		failedMatcher: regexp.MustCompile(`^\s*--- FAIL: (\S+) \(.+$`),
 	}
 }
 
-func (p *Parser) ParseGoTestStep(step *Step) {
+func (p *Parser) ParseGoTestStep(id *int, step *Step) {
 	for _, line := range step.Lines {
-		p.parseGoTestLine(step, line)
+		p.parseGoTestLine(id, step, line)
 	}
 }
 
-func (p *Parser) parseGoTestLine(step *Step, line string) {
+func (p *Parser) ParseGoTestStdin(id *int, step *Step, stdIn io.Reader) {
+	scanner := bufio.NewScanner(stdIn)
+
+	for scanner.Scan() {
+		p.parseGoTestLine(id, step, scanner.Text())
+	}
+
+	// ignore the Err() on purpose
+	_ = scanner.Err()
+	if p.doneChan != nil {
+		p.doneChan <- true
+	}
+}
+
+func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	if p.suiteMatcher.MatchString(line) {
 		step.TestSuites = append(step.TestSuites, TestSuite{
-			ID:    *p.id,
+			ID:    *id,
 			Title: line,
 
 			// placeholder for main TestRun
 			TestRuns: []TestRun{
 				{
-					ID:      *p.id + 1,
+					ID:      *id + 1,
 					Name:    p.mainTestRunName,
 					Lines:   p.mainTestLines,
 					Success: true,
@@ -60,10 +80,15 @@ func (p *Parser) parseGoTestLine(step *Step, line string) {
 			},
 		})
 
-		*p.id = *p.id + 2
+		*id = *id + 2
 
 		p.currentTestSuite = line
 		p.currentTestRun = ""
+
+		if p.stepUpdatedChan != nil {
+			p.stepUpdatedChan <- true
+		}
+
 		return
 	}
 
@@ -84,12 +109,12 @@ func (p *Parser) parseGoTestLine(step *Step, line string) {
 		}
 
 		step.TestSuites[len(step.TestSuites)-1].TestRuns = append(step.TestSuites[len(step.TestSuites)-1].TestRuns, TestRun{
-			ID:      *p.id,
+			ID:      *id,
 			Name:    p.currentTestRun,
 			Success: true,
 		})
 
-		*p.id = *p.id + 1
+		*id = *id + 1
 
 		p.runIndexMapping[p.currentTestRun] = len(step.TestSuites[len(step.TestSuites)-1].TestRuns) - 1
 		return
