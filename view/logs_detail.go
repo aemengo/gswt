@@ -148,7 +148,7 @@ func showTestRuns(table *tview.Table, suite model.TestSuite, row *int, rowIDMapp
 				SetSelectable(false))
 
 		table.SetCell(*row, 1,
-			tview.NewTableCell(icon+tr.Name).
+			tview.NewTableCell(icon+strings.ReplaceAll(tr.Name, "_", " ")).
 				SetTextColor(tcell.ColorLightGray).
 				SetSelectable(true))
 
