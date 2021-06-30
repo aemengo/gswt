@@ -16,9 +16,10 @@ type Parser struct {
 	reportMatcher *regexp.Regexp
 	failedMatcher *regexp.Regexp
 
-	runIndexMapping  map[string]int
-	currentTestSuite string
-	currentTestRun   string
+	suiteIndexMapping map[string]int
+	runindexMapping   map[string]map[string]int
+	currentTestSuite  string
+	currentTestRun    string
 
 	// workaround to capture main text before loaded
 	mainTestRunName string
@@ -30,9 +31,10 @@ type Parser struct {
 
 func NewParser(stepUpdatedChan chan bool, doneChan chan bool) *Parser {
 	return &Parser{
-		runIndexMapping: map[string]int{},
-		stepUpdatedChan: stepUpdatedChan,
-		doneChan:        doneChan,
+		suiteIndexMapping: map[string]int{},
+		runindexMapping:   map[string]map[string]int{},
+		stepUpdatedChan:   stepUpdatedChan,
+		doneChan:          doneChan,
 
 		suiteMatcher:  regexp.MustCompile(`^Suite: .+$`),
 		tallyMatcher:  regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`),
@@ -63,13 +65,13 @@ func (p *Parser) ParseGoTestStdin(id *int, step *Step, stdIn io.Reader) {
 	}
 }
 
+// TODO: write tests!
 func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	if p.suiteMatcher.MatchString(line) {
 		step.TestSuites = append(step.TestSuites, TestSuite{
 			ID:    *id,
 			Title: line,
 
-			// placeholder for main TestRun
 			TestRuns: []TestRun{
 				{
 					ID:      *id + 1,
@@ -84,6 +86,13 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 
 		p.currentTestSuite = line
 		p.currentTestRun = ""
+		p.suiteIndexMapping[line] = len(step.TestSuites) - 1
+
+		if p.runindexMapping[line] == nil {
+			p.runindexMapping[line] = map[string]int{
+				p.mainTestRunName: 0,
+			}
+		}
 
 		if p.stepUpdatedChan != nil {
 			p.stepUpdatedChan <- true
@@ -93,7 +102,11 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	}
 
 	if p.tallyMatcher.MatchString(line) {
-		step.TestSuites[len(step.TestSuites)-1].Title = step.TestSuites[len(step.TestSuites)-1].Title + fmt.Sprintf(" (%s)", line)
+		si, ok := p.suiteIndexMapping[p.currentTestSuite]
+		if ok {
+			step.TestSuites[si].Title = step.TestSuites[si].Title + fmt.Sprintf(" (%s)", line)
+		}
+
 		return
 	}
 
@@ -104,19 +117,22 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 		if p.currentTestSuite == "" {
 			p.mainTestRunName = p.currentTestRun
 			p.mainTestLines = []string{}
-			p.runIndexMapping[p.currentTestRun] = 0
 			return
 		}
 
-		step.TestSuites[len(step.TestSuites)-1].TestRuns = append(step.TestSuites[len(step.TestSuites)-1].TestRuns, TestRun{
-			ID:      *id,
-			Name:    p.currentTestRun,
-			Success: true,
-		})
+		si, ok := p.suiteIndexMapping[p.currentTestSuite]
+		if ok {
+			step.TestSuites[si].TestRuns = append(step.TestSuites[si].TestRuns, TestRun{
+				ID:      *id,
+				Name:    p.currentTestRun,
+				Success: true,
+			})
 
-		*id = *id + 1
+			p.runindexMapping[p.currentTestSuite][p.currentTestRun] = len(step.TestSuites[si].TestRuns) - 1
 
-		p.runIndexMapping[p.currentTestRun] = len(step.TestSuites[len(step.TestSuites)-1].TestRuns) - 1
+			*id = *id + 1
+		}
+
 		return
 	}
 
@@ -139,10 +155,13 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	if len(failureMatches) == 2 {
 		testRun := failureMatches[1]
 
-		i, ok := p.runIndexMapping[testRun]
-		if ok {
-			if len(step.TestSuites) != 0 {
-				step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Success = false
+		for k := range p.runindexMapping {
+			ri, ok := p.runindexMapping[k][testRun]
+			if ok {
+				si := p.suiteIndexMapping[k]
+
+				step.TestSuites[si].TestRuns[ri].Success = false
+				return
 			}
 		}
 
@@ -150,20 +169,21 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	}
 
 	if p.currentTestRun != "" {
-		if p.currentTestSuite == "" {
+		si, ok := p.suiteIndexMapping[p.currentTestSuite]
+		if !ok {
 			p.mainTestLines = append(p.mainTestLines, line)
 			return
 		}
 
-		i, ok := p.runIndexMapping[p.currentTestRun]
+		ri, ok := p.runindexMapping[p.currentTestSuite][p.currentTestRun]
 		if ok {
 			// throw away blank first lines
-			testRunLogCount := len(step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines)
+			testRunLogCount := len(step.TestSuites[si].TestRuns[ri].Lines)
 			if strings.TrimSpace(line) == "" && testRunLogCount == 0 {
 				return
 			}
 
-			step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines = append(step.TestSuites[len(step.TestSuites)-1].TestRuns[i].Lines, line)
+			step.TestSuites[si].TestRuns[ri].Lines = append(step.TestSuites[si].TestRuns[ri].Lines, line)
 		}
 	}
 }
