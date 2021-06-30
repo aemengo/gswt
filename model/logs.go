@@ -8,33 +8,6 @@ import (
 
 type Logs []Step
 
-type Step struct {
-	ID       int
-	Title    string
-	Selected bool
-	Success  bool
-
-	Lines      []string
-	TestSuites []TestSuite
-}
-
-type TestSuite struct {
-	ID       int
-	Title    string
-	Selected bool
-
-	TestRuns []TestRun
-}
-
-type TestRun struct {
-	ID       int
-	Name     string
-	Success  bool
-	Selected bool
-
-	Lines []string
-}
-
 func LogsFromFile(logPath string) (Logs, error) {
 	f, err := os.Open(logPath)
 	if err != nil {
@@ -165,33 +138,6 @@ func (l Logs) Toggle(id int) {
 			l[i].Selected = false
 		}
 	}
-}
-
-func (s *Step) IsTest() bool {
-	return len(s.TestSuites) != 0
-}
-
-func (s *Step) FailedTestSuites() []TestSuite {
-	var ts []TestSuite
-
-	for _, suite := range s.TestSuites {
-		if !strings.Contains(suite.Title, "Failed: 0") {
-			ts = append(ts, suite)
-		}
-	}
-
-	return ts
-}
-
-func (s *TestSuite) FailedTestRuns() []TestRun {
-	var tr []TestRun
-
-	for _, run := range s.TestRuns {
-		if !run.Success {
-			tr = append(tr, run)
-		}
-	}
-	return tr
 }
 
 func bPtr(b bool) *bool {
