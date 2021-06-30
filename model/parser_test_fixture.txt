@@ -1,0 +1,321 @@
+=== RUN   TestAnalyzer
+    analyzer_test.go:57: run registry on localhost:43801
+    analyzer_test.go:61: run registry on localhost:46711
+    binaries.go:52: Building binaries:  [make build-linux]
+Suite: acceptance-analyzer/0.3
+Total: 33 | Focused: 0 | Pending: 0
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/called_without_an_app_image/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/called_without_an_app_image/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/called_with_group/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/called_with_group/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/called_with_skip_layers/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/called_with_skip_layers/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/called_with_cache_dir/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/called_with_cache_dir/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/cache_image_tag_and_cache_directory_are_both_blank/warns
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/cache_image_tag_and_cache_directory_are_both_blank/warns
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/group_path_is_provided/uses_the_provided_group_path
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/group_path_is_provided/uses_the_provided_group_path
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/writes_analyzed.toml
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/writes_analyzed.toml
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/does_not_restore_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/does_not_restore_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/writes_analyzed.toml
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/writes_analyzed.toml
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/called_without_an_app_image/errors
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/does_not_restore_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/writes_analyzed.toml
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/does_not_restore_app_metadata
+    analyzer_test.go:310: Platform API < 0.7 restores app metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/group_path_is_provided/uses_the_provided_group_path
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+    docker.go:57: Expected nil: failed to execute command: [docker run --env CNB_PLATFORM_API=0.3 --name test-container-tdfjgzsqhr lifecycle/acceptance/analyzer /cnb/lifecycle/analyzer -analyzed /some-dir/some-analyzed.toml localhost:46711/some-image], exit status 1, , [33;1mWarning: [0mNot restoring cached layer metadata, no cache flag specified.
+        [31;1mERROR: [0mfailed to get previous image: connect to repo store "localhost:46711/some-image": Get "https://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused; Get "http://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory
+
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/cache_image_tag_and_cache_directory_are_both_blank/warns
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/called_with_cache_dir/errors
+    analyzer_test.go:170: Platform API < 0.7 accepts a -cache-dir flag
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/called_with_skip_layers/errors
+    analyzer_test.go:151: Platform API < 0.7 accepts a -skip-layers flag
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/called_with_group/errors
+    analyzer_test.go:132: Platform API < 0.7 accepts a -group flag
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier
+    analyzer_test.go:795: Platform API < 0.7 does not support -previous-image
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path
+    analyzer_test.go:1043: Platform API < 0.5 reads and writes to the working directory; Platform 0.7+ does not accept a -cache-dir flag
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier
+    analyzer_test.go:795: Platform API < 0.7 does not support -previous-image
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/writes_analyzed.toml
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/registry_case/writes_analyzed.toml
+    docker.go:57: Expected nil: failed to execute command: [docker run --env CNB_PLATFORM_API=0.3 --name test-container-iojjvyetsh lifecycle/acceptance/analyzer /cnb/lifecycle/analyzer localhost:46711/some-image], exit status 1, , [33;1mWarning: [0mNot restoring cached layer metadata, no cache flag specified.
+        [31;1mERROR: [0mfailed to get previous image: connect to repo store "localhost:46711/some-image": Get "https://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused; Get "http://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused
+=== CONT  TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory
+
+
+Passed: 24 | Failed: 2 | Skipped: 7
+
+Suite: acceptance-analyzer/0.4
+Total: 33 | Focused: 0 | Pending: 0
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/called_without_an_app_image/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/called_without_an_app_image/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/called_with_group/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/called_with_group/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/called_with_skip_layers/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/called_with_skip_layers/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/called_with_cache_dir/errors
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/called_with_cache_dir/errors
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/cache_image_tag_and_cache_directory_are_both_blank/warns
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/cache_image_tag_and_cache_directory_are_both_blank/warns
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/group_path_is_provided/uses_the_provided_group_path
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/group_path_is_provided/uses_the_provided_group_path
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/writes_analyzed.toml
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/writes_analyzed.toml
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/does_not_restore_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/does_not_restore_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/writes_analyzed.toml
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/writes_analyzed.toml
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/restores_app_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/restores_app_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory
+=== RUN   TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path
+=== PAUSE TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/called_without_an_app_image/errors
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path
+    analyzer_test.go:1043: Platform API < 0.5 reads and writes to the working directory; Platform 0.7+ does not accept a -cache-dir flag
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier
+    analyzer_test.go:795: Platform API < 0.7 does not support -previous-image
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier
+    analyzer_test.go:795: Platform API < 0.7 does not support -previous-image
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/writes_analyzed.toml
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/registry_case/writes_analyzed.toml
+    docker.go:57: Expected nil: failed to execute command: [docker run --env CNB_PLATFORM_API=0.4 --name test-container-wzkhbucfyx lifecycle/acceptance/analyzer /cnb/lifecycle/analyzer localhost:46711/some-image], exit status 1, , [33;1mWarning: [0mNot restoring cached layer metadata, no cache flag specified.
+        [31;1mERROR: [0mfailed to get previous image: connect to repo store "localhost:46711/some-image": Get "https://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused; Get "http://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/does_not_restore_app_metadata
+
+    analyzer_test.go:310: Platform API < 0.7 restores app metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/restores_app_metadata
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/daemon_case/writes_analyzed.toml
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/group_path_is_provided/uses_the_provided_group_path
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path
+    docker.go:57: Expected nil: failed to execute command: [docker run --env CNB_PLATFORM_API=0.4 --name test-container-vuffthmzfg lifecycle/acceptance/analyzer /cnb/lifecycle/analyzer -analyzed /some-dir/some-analyzed.toml localhost:46711/some-image], exit status 1, , [33;1mWarning: [0mNot restoring cached layer metadata, no cache flag specified.
+        [31;1mERROR: [0mfailed to get previous image: connect to repo store "localhost:46711/some-image": Get "https://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused; Get "http://localhost:46711/v2/": dial tcp 127.0.0.1:46711: connect: connection refused
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/called_with_cache_dir/errors
+    analyzer_test.go:170: Platform API < 0.7 accepts a -cache-dir flag
+
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/cache_image_tag_and_cache_directory_are_both_blank/warns
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/called_with_skip_layers/errors
+    analyzer_test.go:151: Platform API < 0.7 accepts a -skip-layers flag
+=== CONT  TestAnalyzer/acceptance-analyzer/0.4/called_with_group/errors
+    analyzer_test.go:132: Platform API < 0.7 accepts a -group flag
+
+Passed: 24 | Failed: 2 | Skipped: 7
+
+
+=== CONT  TestAnalyzer
+    analyzer_test.go:91: stop registry
+    analyzer_test.go:91: stop registry
+--- FAIL: TestAnalyzer (154.65s)
+    --- FAIL: TestAnalyzer/acceptance-analyzer/0.3 (0.01s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/called_without_an_app_image/errors (0.65s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata (1.01s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory (3.68s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata (4.92s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata (0.70s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata (4.11s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata (2.02s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache (3.86s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/restores_app_metadata (1.34s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/writes_analyzed.toml (0.88s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/app_image_exists/does_not_restore_app_metadata (0.97s)
+        --- FAIL: TestAnalyzer/acceptance-analyzer/0.3/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path (0.82s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory (0.65s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/group_path_is_provided/uses_the_provided_group_path (3.09s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/called_with_cache_dir/errors (0.06s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/called_with_skip_layers/errors (0.06s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/called_with_group/errors (0.06s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier (0.06s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path (0.05s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/cache_image_tag_and_cache_directory_are_both_blank/warns (2.55s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory (3.17s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata (3.10s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error (0.55s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata (2.71s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata (2.82s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.3/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier (0.07s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata (1.67s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata (1.79s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/no_auth_registry/restores_app_metadata (0.88s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata (0.95s)
+        --- FAIL: TestAnalyzer/acceptance-analyzer/0.3/registry_case/writes_analyzed.toml (0.80s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata (0.87s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.3/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory (2.50s)
+    --- FAIL: TestAnalyzer/acceptance-analyzer/0.4 (0.00s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/called_without_an_app_image/errors (0.62s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_layers_path_and_writes_analyzed.toml_at_the_layers_path (0.05s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_isn't_writeable_by_the_CNB_user's_group/recursively_chowns_the_directory (2.58s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/layers_path_is_provided/uses_the_group_path_at_the_working_directory_and_writes_analyzed.toml_at_the_working_directory (3.17s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/no_auth_registry/throw_read/write_error (0.46s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_directory_case/restores_cache_metadata (2.86s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata (2.56s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_exists/writes_analyzed.toml_with_previous_image_identifier (0.07s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/registry_case/called_with_previous_image/auth_registry/the_destination_image_does_not_exist/writes_analyzed.toml_with_previous_image_identifier (0.05s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata (0.70s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/cache_is_provided/cache_image_case/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata (2.71s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/no_auth_registry/restores_app_metadata (0.86s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata (0.86s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_app_metadata (0.83s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/registry_case/app_image_exists/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_app_metadata (0.84s)
+        --- FAIL: TestAnalyzer/acceptance-analyzer/0.4/registry_case/writes_analyzed.toml (0.82s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/does_not_restore_app_metadata (0.24s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/restores_cache_metadata (1.21s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/no_auth_registry/restores_cache_metadata (0.89s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_directory_case/the_provided_cache_directory_is_writeable_by_the_CNB_user's_group/doesn't_chown_the_directory (2.93s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_CNB_REGISTRY_AUTH/restores_cache_metadata (0.80s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_registry/auth_registry/registry_creds_are_provided_in_the_docker_config.json/restores_cache_metadata (2.70s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/skip_layers_is_provided/writes_analyzed.toml_and_does_not_write_buildpack_layer_metadata (1.00s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/cache_is_provided/cache_image_case/cache_image_is_in_a_daemon/ignores_the_cache (3.76s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/app_image_exists/restores_app_metadata (1.15s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/the_provided_layers_directory_isn't_writeable/recursively_chowns_the_directory (0.85s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/daemon_case/writes_analyzed.toml (1.18s)
+        --- FAIL: TestAnalyzer/acceptance-analyzer/0.4/analyzed_path_is_provided/writes_analyzed.toml_at_the_provided_path (0.86s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/called_with_cache_dir/errors (0.06s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/group_path_is_provided/uses_the_provided_group_path (3.06s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/called_with_skip_layers/errors (0.08s)
+        --- SKIP: TestAnalyzer/acceptance-analyzer/0.4/called_with_group/errors (0.06s)
+        --- PASS: TestAnalyzer/acceptance-analyzer/0.4/cache_image_tag_and_cache_directory_are_both_blank/warns (2.66s)
+FAIL
+FAIL   github.com/buildpacks/lifecycle/acceptance  359.555s
+FAIL

@@ -17,7 +17,7 @@ type Parser struct {
 	failedMatcher *regexp.Regexp
 
 	suiteIndexMapping map[string]int
-	runindexMapping   map[string]map[string]int
+	runIndexMapping   map[string]map[string]int
 	currentTestSuite  string
 	currentTestRun    string
 
@@ -32,7 +32,7 @@ type Parser struct {
 func NewParser(stepUpdatedChan chan bool, doneChan chan bool) *Parser {
 	return &Parser{
 		suiteIndexMapping: map[string]int{},
-		runindexMapping:   map[string]map[string]int{},
+		runIndexMapping:   map[string]map[string]int{},
 		stepUpdatedChan:   stepUpdatedChan,
 		doneChan:          doneChan,
 
@@ -51,21 +51,20 @@ func (p *Parser) ParseGoTestStep(id *int, step *Step) {
 	}
 }
 
-func (p *Parser) ParseGoTestStdin(id *int, step *Step, stdIn io.Reader) {
-	scanner := bufio.NewScanner(stdIn)
+func (p *Parser) ParseGoTestStdin(id *int, step *Step, stdin io.Reader) {
+	scanner := bufio.NewScanner(stdin)
 
 	for scanner.Scan() {
 		p.parseGoTestLine(id, step, scanner.Text())
 	}
 
 	// ignore the Err() on purpose
-	_ = scanner.Err()
+	// _ = scanner.Err()
 	if p.doneChan != nil {
 		p.doneChan <- true
 	}
 }
 
-// TODO: write tests!
 func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	if p.suiteMatcher.MatchString(line) {
 		step.TestSuites = append(step.TestSuites, TestSuite{
@@ -88,8 +87,8 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 		p.currentTestRun = ""
 		p.suiteIndexMapping[line] = len(step.TestSuites) - 1
 
-		if p.runindexMapping[line] == nil {
-			p.runindexMapping[line] = map[string]int{
+		if p.runIndexMapping[line] == nil {
+			p.runIndexMapping[line] = map[string]int{
 				p.mainTestRunName: 0,
 			}
 		}
@@ -128,7 +127,7 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 				Success: true,
 			})
 
-			p.runindexMapping[p.currentTestSuite][p.currentTestRun] = len(step.TestSuites[si].TestRuns) - 1
+			p.runIndexMapping[p.currentTestSuite][p.currentTestRun] = len(step.TestSuites[si].TestRuns) - 1
 
 			*id = *id + 1
 		}
@@ -155,13 +154,10 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	if len(failureMatches) == 2 {
 		testRun := failureMatches[1]
 
-		for k := range p.runindexMapping {
-			ri, ok := p.runindexMapping[k][testRun]
+		for k, si := range p.suiteIndexMapping {
+			ri, ok := p.runIndexMapping[k][testRun]
 			if ok {
-				si := p.suiteIndexMapping[k]
-
 				step.TestSuites[si].TestRuns[ri].Success = false
-				return
 			}
 		}
 
@@ -169,21 +165,22 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 	}
 
 	if p.currentTestRun != "" {
-		si, ok := p.suiteIndexMapping[p.currentTestSuite]
-		if !ok {
+		if p.currentTestSuite == "" {
 			p.mainTestLines = append(p.mainTestLines, line)
 			return
 		}
 
-		ri, ok := p.runindexMapping[p.currentTestSuite][p.currentTestRun]
-		if ok {
-			// throw away blank first lines
-			testRunLogCount := len(step.TestSuites[si].TestRuns[ri].Lines)
-			if strings.TrimSpace(line) == "" && testRunLogCount == 0 {
-				return
-			}
+		for k, si := range p.suiteIndexMapping {
+			ri, ok := p.runIndexMapping[k][p.currentTestRun]
+			if ok {
+				// throw away blank first lines
+				testRunLogCount := len(step.TestSuites[si].TestRuns[ri].Lines)
+				if strings.TrimSpace(line) == "" && testRunLogCount == 0 {
+					continue
+				}
 
-			step.TestSuites[si].TestRuns[ri].Lines = append(step.TestSuites[si].TestRuns[ri].Lines, line)
+				step.TestSuites[si].TestRuns[ri].Lines = append(step.TestSuites[si].TestRuns[ri].Lines, line)
+			}
 		}
 	}
 }

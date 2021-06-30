@@ -11,7 +11,7 @@ import (
 
 type CLController struct {
 	app             *tview.Application
-	stdIn           io.Reader
+	stdin           io.Reader
 	stepUpdatedChan chan bool
 	doneChan        chan bool
 	testsView       *view.Tests
@@ -19,11 +19,11 @@ type CLController struct {
 	logs            model.Logs
 }
 
-func NewCLController(app *tview.Application, logger *log.Logger, stdIn io.Reader) *CLController {
+func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader) *CLController {
 	return &CLController{
 		app:             app,
 		logger:          logger,
-		stdIn:           stdIn,
+		stdin:           stdin,
 		stepUpdatedChan: make(chan bool, 1),
 		doneChan:        make(chan bool, 1),
 		testsView:       view.NewTests(),
@@ -44,14 +44,14 @@ func (c *CLController) Run() error {
 
 	go c.handleEvents()
 
-	go model.NewParser(c.stepUpdatedChan, c.doneChan).ParseGoTestStdin(&id, &c.logs[0], c.stdIn)
+	go model.NewParser(c.stepUpdatedChan, c.doneChan).ParseGoTestStdin(&id, &c.logs[0], c.stdin)
 
 	return c.app.Run()
 }
 
 func (c *CLController) handleEvents() {
 	var (
-		mode = view.ModeParseTestsRunning
+		mode   = view.ModeParseTestsRunning
 		ticker = time.NewTicker(250 * time.Millisecond)
 	)
 
