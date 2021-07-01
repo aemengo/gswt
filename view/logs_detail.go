@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectedIDs ...int) *tview.Table {
+func logsDetailView(logs model.Logs, mode int, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectedIDs ...int) *tview.Table {
 	style := tcell.StyleDefault.
 		Foreground(tcell.ColorMediumTurquoise).
 		Background(tcell.ColorDarkSlateGray).
@@ -37,7 +37,7 @@ func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHan
 
 		if step.Selected {
 			if step.IsTest() {
-				showTestSuites(table, step, &row, rowIDMapping, idRowMapping)
+				showTestSuites(table, step, mode, &row, rowIDMapping, idRowMapping)
 				continue
 			}
 
@@ -93,7 +93,31 @@ func showTitleLine(table *tview.Table, step model.Step, index int, row *int, row
 	*row = *row + 1
 }
 
-func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
+func expandTestLogLines(lines []string, mode int) []string {
+	if mode != ModeParseLogsFuller {
+		return lines
+	}
+
+	var expandedLines []string
+
+	for _, line := range lines {
+		var count = 1
+
+		for i, s := range strings.Split(line, ": ") {
+			if i == 0 {
+				// I don't know why this is necessary to make things look pretty in the terminal
+				expandedLines = append(expandedLines, s+":")
+			} else {
+				expandedLines = append(expandedLines, "    "+strings.Repeat("  ", count)+s+":")
+				count = count + 1
+			}
+		}
+	}
+
+	return expandedLines
+}
+
+func showTestLogLines(table *tview.Table, run model.TestRun, mode int, row *int) {
 	if len(run.Lines) == 0 {
 		table.SetCell(*row, 0,
 			tview.NewTableCell("").
@@ -109,17 +133,9 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 	}
 
 	goFileRegex := regexp.MustCompile(`(\S+\.go:\d+:)`)
-	errRegex := regexp.MustCompile(`(?i)^\s+error:`)
 
-	for i, line := range run.Lines {
-
+	for _, line := range expandTestLogLines(run.Lines, mode) {
 		txt := tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))
-
-		if i == len(run.Lines)-1 {
-			if errRegex.MatchString(txt) {
-				txt = "[red]" + txt
-			}
-		}
 
 		table.SetCell(*row, 0,
 			tview.NewTableCell("").
@@ -134,7 +150,7 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 	}
 }
 
-func showTestRuns(table *tview.Table, suite model.TestSuite, row *int, rowIDMapping map[int]int, idRowMapping map[int]int) {
+func showTestRuns(table *tview.Table, suite model.TestSuite, mode int, row *int, rowIDMapping map[int]int, idRowMapping map[int]int) {
 	failedTestRuns := suite.FailedTestRuns()
 
 	for _, tr := range failedTestRuns {
@@ -157,12 +173,12 @@ func showTestRuns(table *tview.Table, suite model.TestSuite, row *int, rowIDMapp
 		*row = *row + 1
 
 		if tr.Selected {
-			showTestLogLines(table, tr, row)
+			showTestLogLines(table, tr, mode, row)
 		}
 	}
 }
 
-func showTestSuites(table *tview.Table, step model.Step, row *int, rowIDMapping map[int]int, idRowMapping map[int]int) {
+func showTestSuites(table *tview.Table, step model.Step, mode int, row *int, rowIDMapping map[int]int, idRowMapping map[int]int) {
 	failedTestSuites := step.FailedTestSuites()
 	failureRegex := regexp.MustCompile(`(Failed: \d+)`)
 
@@ -200,7 +216,7 @@ func showTestSuites(table *tview.Table, step model.Step, row *int, rowIDMapping 
 		*row = *row + 1
 
 		if ts.Selected {
-			showTestRuns(table, ts, row, rowIDMapping, idRowMapping)
+			showTestRuns(table, ts, mode, row, rowIDMapping, idRowMapping)
 		}
 	}
 }

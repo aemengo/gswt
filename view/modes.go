@@ -4,7 +4,7 @@ const (
 	ModeChooseCommits = iota
 	ModeChooseChecks
 	ModeParseLogs
-	ModeParseLogsFullScreen
+	ModeParseLogsFuller
 	ModeParseTestsRunning
 	ModeParseTestsFinished
 )

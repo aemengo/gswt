@@ -104,7 +104,7 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 		case logMode = <-c.logsView.ToggleModeChan:
 			switch logMode {
 			case view.ModeParseLogs:
-				logMode = view.ModeParseLogsFullScreen
+				logMode = view.ModeParseLogsFuller
 			default:
 				logMode = view.ModeParseLogs
 			}

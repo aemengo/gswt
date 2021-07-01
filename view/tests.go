@@ -21,8 +21,8 @@ func NewTests() *Tests {
 }
 
 func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int) {
-	statusBar := v.buildStatusBar(mode, logs, func() { app.Draw() })
-	table := v.buildTestsTable(logs)
+	statusBar := v.buildStatusBar(logs, mode, func() { app.Draw() })
+	table := v.buildTestsTable(logs, mode)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
@@ -32,7 +32,7 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int) {
 	app.SetRoot(flex, true)
 }
 
-func (v *Tests) buildStatusBar(mode int, logs model.Logs, handler func()) *tview.TextView {
+func (v *Tests) buildStatusBar(logs model.Logs, mode int, handler func()) *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
 		SetChangedFunc(handler).
@@ -51,7 +51,7 @@ func (v *Tests) buildStatusBar(mode int, logs model.Logs, handler func()) *tview
 	return tv
 }
 
-func (v *Tests) buildTestsTable(logs model.Logs) *tview.Table {
+func (v *Tests) buildTestsTable(logs model.Logs, mode int) *tview.Table {
 	escHandler := func(key tcell.Key) {}
 	enterHandler := func() {}
 	selectedHandler := func(id int) {
@@ -60,6 +60,7 @@ func (v *Tests) buildTestsTable(logs model.Logs) *tview.Table {
 
 	return logsDetailView(
 		logs,
+		mode,
 		escHandler,
 		selectedHandler,
 		enterHandler)
