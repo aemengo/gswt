@@ -21,7 +21,7 @@ func NewTests() *Tests {
 }
 
 func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int) {
-	statusBar := v.buildStatusBar(mode, func() { app.Draw() })
+	statusBar := v.buildStatusBar(mode, logs, func() { app.Draw() })
 	table := v.buildTestsTable(logs)
 
 	flex := tview.NewFlex().
@@ -32,7 +32,7 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int) {
 	app.SetRoot(flex, true)
 }
 
-func (v *Tests) buildStatusBar(mode int, handler func()) *tview.TextView {
+func (v *Tests) buildStatusBar(mode int, logs model.Logs, handler func()) *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
 		SetChangedFunc(handler).
@@ -43,9 +43,9 @@ func (v *Tests) buildStatusBar(mode int, handler func()) *tview.TextView {
 	duration := time.Now().Sub(v.startTime)
 
 	if mode == ModeParseTestsRunning {
-		tv.SetText(fmt.Sprintf("Running... (%s)", duration))
+		tv.SetText(fmt.Sprintf("Running %s... (%s)", testsCount(logs), duration))
 	} else {
-		tv.SetText(fmt.Sprintf("Completed! (%s)", duration))
+		tv.SetText(fmt.Sprintf("Completed %s! (%s)", testsCount(logs), duration))
 	}
 
 	return tv
@@ -63,4 +63,13 @@ func (v *Tests) buildTestsTable(logs model.Logs) *tview.Table {
 		escHandler,
 		selectedHandler,
 		enterHandler)
+}
+
+func testsCount(logs model.Logs) string {
+	count := logs.TestCount()
+	if count == 1 {
+		return "1 test"
+	}
+
+	return fmt.Sprintf("%d tests", count)
 }

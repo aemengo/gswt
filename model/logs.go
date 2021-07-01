@@ -140,6 +140,18 @@ func (l Logs) Toggle(id int) {
 	}
 }
 
+func (l Logs) TestCount() int {
+	var count int
+
+	for _, s := range l {
+		for _, suite := range s.TestSuites {
+			count = count + suite.TestCount
+		}
+	}
+
+	return count
+}
+
 func bPtr(b bool) *bool {
 	return &b
 }

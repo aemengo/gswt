@@ -1,9 +1,10 @@
 package model
 
 type TestSuite struct {
-	ID       int
-	Title    string
-	Selected bool
+	ID        int
+	Title     string
+	Selected  bool
+	TestCount int
 
 	TestRuns []TestRun
 }

@@ -44,6 +44,9 @@ func testParser(t *testing.T, when spec.G, it spec.S) {
 
 		assertNum(t, len(step.TestSuites[0].TestRuns[0].Lines), 5)
 		assertNum(t, len(step.TestSuites[1].TestRuns[0].Lines), 5)
+
+		assertNum(t, step.TestSuites[0].TestCount, 33)
+		assertNum(t, step.TestSuites[1].TestCount, 33)
 	})
 }
 

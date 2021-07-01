@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 type Parser struct {
 	suiteMatcher  *regexp.Regexp
 	tallyMatcher  *regexp.Regexp
+	totalMatcher  *regexp.Regexp
 	runMatcher    *regexp.Regexp
 	actionMatcher *regexp.Regexp
 	reportMatcher *regexp.Regexp
@@ -38,6 +40,7 @@ func NewParser(stepUpdatedChan chan bool, doneChan chan bool) *Parser {
 
 		suiteMatcher:  regexp.MustCompile(`^Suite: .+$`),
 		tallyMatcher:  regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`),
+		totalMatcher:  regexp.MustCompile(`^Total: (\d+) | Focused: \d+ | Pending: \d+$`),
 		runMatcher:    regexp.MustCompile(`^=== RUN\s+(\S+)$`),
 		actionMatcher: regexp.MustCompile(`^=== [A-Z]+\s+(\S+)$`),
 		reportMatcher: regexp.MustCompile(`^--- [A-Z]+: (\S+) \(.+$`),
@@ -109,9 +112,22 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 		return
 	}
 
-	matches := p.runMatcher.FindStringSubmatch(line)
-	if len(matches) == 2 {
-		p.currentTestRun = matches[1]
+	totalMatches := p.totalMatcher.FindStringSubmatch(line)
+	if len(totalMatches) == 2 {
+		totalStr := totalMatches[1]
+
+		si, ok := p.suiteIndexMapping[p.currentTestSuite]
+		if ok {
+			total, _ := strconv.Atoi(totalStr)
+			step.TestSuites[si].TestCount = step.TestSuites[si].TestCount + total
+		}
+
+		return
+	}
+
+	runMatches := p.runMatcher.FindStringSubmatch(line)
+	if len(runMatches) == 2 {
+		p.currentTestRun = runMatches[1]
 
 		if p.currentTestSuite == "" {
 			p.mainTestRunName = p.currentTestRun
