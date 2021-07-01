@@ -102,11 +102,15 @@ func expandTestLogLines(lines []string, mode int) []string {
 
 	for _, line := range lines {
 		var count = 1
+		var splitLines = strings.Split(line, ": ")
 
-		for i, s := range strings.Split(line, ": ") {
+		for i, s := range splitLines {
 			if i == 0 {
 				// I don't know why this is necessary to make things look pretty in the terminal
 				expandedLines = append(expandedLines, s+":")
+			} else if i == len(splitLines)-1 {
+				expandedLines = append(expandedLines, "    "+strings.Repeat("  ", count)+s)
+				count = count + 1
 			} else {
 				expandedLines = append(expandedLines, "    "+strings.Repeat("  ", count)+s+":")
 				count = count + 1
