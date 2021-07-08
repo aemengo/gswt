@@ -21,7 +21,7 @@ func NewTests() *Tests {
 }
 
 func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int) {
-	statusBar := v.buildStatusBar(mode, logs, func() { app.Draw() })
+	statusBar := v.buildStatusBar(mode, logs)
 	table := v.buildTestsTable(logs)
 
 	flex := tview.NewFlex().
@@ -32,10 +32,9 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int) {
 	app.SetRoot(flex, true)
 }
 
-func (v *Tests) buildStatusBar(mode int, logs model.Logs, handler func()) *tview.TextView {
+func (v *Tests) buildStatusBar(mode int, logs model.Logs) *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
-		SetChangedFunc(handler).
 		SetTextAlign(tview.AlignRight).
 		SetTextColor(tcell.ColorLightGray).
 		SetBackgroundColor(viewBackgroundColor)
