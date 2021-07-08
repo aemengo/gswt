@@ -38,6 +38,8 @@ func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, l
 	case ModeChooseChecks:
 		flex.AddItem(commitList, 0, 1, true)
 		flex.AddItem(logsDetail, 0, 4, false)
+	case ModeParseLogsFullScreen:
+		flex.AddItem(logsDetail, 0, 1, true)
 	default:
 		flex.AddItem(commitList, 0, 1, false)
 		flex.AddItem(logsDetail, 0, 4, true)
@@ -60,7 +62,7 @@ func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, sel
 	}
 
 	if utils.ShouldShowLogs(checks.Selected) {
-		return logsDetailView(logs, mode, escHandler, selectedHandler, enterHandler, selectedIDs...)
+		return logsDetailView(logs, escHandler, selectedHandler, enterHandler, selectedIDs...)
 	} else {
 		txtView := tview.NewTextView()
 		txtView.
