@@ -51,9 +51,10 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 		chkSuite  model.CheckSuite
 		commitSHA string
 
-		logs    model.Logs
-		logID   int
-		logMode = view.ModeParseLogs
+		logs       model.Logs
+		logMode    = view.ModeParseLogs
+		selectedID = 0
+		detailText = ""
 	)
 
 	for {
@@ -84,7 +85,7 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 				}
 			}
 
-			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs)
+			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
 		case chkSuite = <-c.logsView.LogsCheckSuiteChan:
 			if utils.ShouldShowLogs(chkSuite.Selected) {
 				var err error
@@ -95,26 +96,32 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 				}
 			}
 
-			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs)
+			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
 
 		// when logs are toggled
-		case logID = <-c.logsView.SelectedStepChan:
-			logs.Toggle(logID)
-			c.logsView.Load(c.app, logMode, chkSuite, logs, logID)
-		case logMode = <-c.logsView.ToggleModeChan:
-			switch logMode {
+		case selectedID = <-c.logsView.SelectedStepChan:
+			logs.Toggle(selectedID)
+			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+		case m := <-c.logsView.ToggleModeChan:
+			switch m {
 			case view.ModeParseLogs:
-				logMode = view.ModeParseLogsFullScreen
+				logMode = view.ModeParseLogsFuller
 			default:
 				logMode = view.ModeParseLogs
+				detailText = ""
 			}
 
-			c.logsView.Load(c.app, logMode, chkSuite, logs, logID)
+			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+
+		// when user scrolls
+		case msg := <-c.logsView.UserDidScrollChan:
+			detailText = msg.Msg
+			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, view.Selection{Type: view.SelectionTypeRow, Value: msg.Row})
 
 		// when ESC is pressed
 		case <-c.logsView.EscapeLogsDetailChan:
 			logMode = view.ModeParseLogs
-			c.logsView.Load(c.app, view.ModeChooseChecks, chkSuite, logs)
+			c.logsView.Load(c.app, view.ModeChooseChecks, chkSuite, logs, detailText)
 		case <-c.checksView.EscapeCheckListChan:
 			c.checksView.Load(c.app, view.ModeChooseCommits, commits, checkRuns, commitSHA)
 		case <-c.logsView.EscapeLogsChan:

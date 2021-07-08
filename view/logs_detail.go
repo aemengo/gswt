@@ -10,26 +10,22 @@ import (
 	"strings"
 )
 
-func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectedIDs ...int) *tview.Table {
-	style := tcell.StyleDefault.
-		Foreground(tcell.ColorMediumTurquoise).
-		Background(tcell.ColorDarkSlateGray).
-		Attributes(tcell.AttrBold)
+const (
+	SelectionTypeID = iota
+	SelectionTypeRow
+)
 
-	table := tview.NewTable()
-	table.
-		SetSelectedStyle(style).
-		SetBorder(true).
-		SetTitleColor(tcell.ColorDimGray).
-		SetBorderPadding(1, 1, 2, 2).
-		SetBorderColor(tcell.ColorDimGray).
-		SetBorderAttributes(tcell.AttrBold).
-		SetBackgroundColor(viewBackgroundColor)
+type Selection struct {
+	Type  int
+	Value int
+}
 
+func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHandler func(id int), enterHandler func(), selectionChangedHandler func(txt string, row int), selections ...Selection) *tview.Table {
 	var (
 		row          = 0
 		rowIDMapping = map[int]int{}
 		idRowMapping = map[int]int{}
+		table        = tview.NewTable()
 	)
 
 	for index, step := range logs {
@@ -45,21 +41,41 @@ func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHan
 		}
 	}
 
-	table.
-		SetSelectable(true, false).
-		SetDoneFunc(escHandler).
-		SetSelectedFunc(rowSelectedFunc(rowIDMapping, selectedHandler, enterHandler))
-
-	if len(selectedIDs) != 0 {
-		id := selectedIDs[0]
-		r := idRowMapping[id]
-		table.Select(r, 1)
+	if len(selections) != 0 {
+		s := selections[0]
+		switch s.Type {
+		case SelectionTypeID:
+			r := idRowMapping[s.Value]
+			table.Select(r, 1)
+		default:
+			table.Select(s.Value, 1)
+		}
 	} else {
 		if row != 0 {
 			table.Select(row-1, 1)
 		}
 	}
 
+	style := tcell.StyleDefault.
+		Foreground(tcell.ColorMediumTurquoise).
+		Background(tcell.ColorDarkSlateGray).
+		Attributes(tcell.AttrBold)
+
+	table.
+		SetSelectable(true, false).
+		SetDoneFunc(escHandler).
+		SetSelectedFunc(rowSelectedFunc(rowIDMapping, selectedHandler, enterHandler)).
+
+		// The following handler must come after the table.Select() above
+		// otherwise an infinite loop happens
+		SetSelectionChangedFunc(selectionChangedFunc(table, selectionChangedHandler)).
+		SetSelectedStyle(style).
+		SetBorder(true).
+		SetTitleColor(tcell.ColorDimGray).
+		SetBorderPadding(1, 1, 2, 2).
+		SetBorderColor(tcell.ColorDimGray).
+		SetBorderAttributes(tcell.AttrBold).
+		SetBackgroundColor(viewBackgroundColor)
 	return table
 }
 
@@ -112,7 +128,6 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 	errRegex := regexp.MustCompile(`(?i)^\s+error:`)
 
 	for i, line := range run.Lines {
-
 		txt := tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))
 
 		if i == len(run.Lines)-1 {
@@ -253,6 +268,13 @@ func rowSelectedFunc(rowIDMapping map[int]int, selectedHandler func(id int), ent
 		}
 
 		enterHandler()
+	}
+}
+
+func selectionChangedFunc(table *tview.Table, selectionChangedHandler func(txt string, row int)) func(row, column int) {
+	return func(row, column int) {
+		txt := table.GetCell(row, column).Text
+		selectionChangedHandler(txt, row)
 	}
 }
 

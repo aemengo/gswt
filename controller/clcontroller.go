@@ -17,6 +17,9 @@ type CLController struct {
 	testsView       *view.Tests
 	logger          *log.Logger
 	logs            model.Logs
+
+	startTime time.Time
+	endTime   time.Time
 }
 
 func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader) *CLController {
@@ -27,6 +30,7 @@ func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader
 		stepUpdatedChan: make(chan bool, 1),
 		doneChan:        make(chan bool, 1),
 		testsView:       view.NewTests(),
+		startTime:       time.Now(),
 		logs: model.Logs{
 			model.Step{
 				Title:    "go test",
@@ -40,7 +44,7 @@ func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader
 func (c *CLController) Run() error {
 	var id = 1
 
-	c.testsView.Load(c.app, c.logs, view.ModeParseTestsRunning)
+	c.testsView.Load(c.app, c.logs, view.ModeParseTestsRunning, view.ModeParseTests, time.Now().Sub(c.startTime), "")
 
 	go c.handleEvents()
 
@@ -51,27 +55,57 @@ func (c *CLController) Run() error {
 
 func (c *CLController) handleEvents() {
 	var (
-		mode   = view.ModeParseTestsRunning
-		ticker = time.NewTicker(250 * time.Millisecond)
+		mode        = view.ModeParseTestsRunning
+		displayMode = view.ModeParseTests
+		ticker      = time.NewTicker(250 * time.Millisecond)
+		detailText  = ""
+		selectedID  = 0
+
+		testDuration = func() time.Duration {
+			if !c.endTime.Equal(time.Time{}) {
+				return c.endTime.Sub(c.startTime)
+			} else {
+				return time.Now().Sub(c.startTime)
+			}
+		}
 	)
 
 	for {
 		select {
 		// when tests are toggled
-		case id := <-c.testsView.SelectedStepChan:
-			c.logs.Toggle(id)
-			c.testsView.Load(c.app, c.logs, mode)
+		case selectedID = <-c.testsView.SelectedStepChan:
+			c.logs.Toggle(selectedID)
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+
+		// when display mode is toggled
+		case m := <-c.testsView.ToggleDisplayModeChan:
+			switch m {
+			case view.ModeParseTests:
+				displayMode = view.ModeParseTestsFuller
+			default:
+				displayMode = view.ModeParseTests
+				detailText = ""
+			}
+
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+
+		// when user scrolls
+		case msg := <-c.testsView.UserDidScrollChan:
+			detailText = msg.Msg
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, view.Selection{Type: view.SelectionTypeRow, Value: msg.Row})
+
 		// when ticker goes off
 		case <-ticker.C:
-			c.testsView.Load(c.app, c.logs, mode)
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
 
 		// when parsing updates
 		case <-c.stepUpdatedChan:
-			c.testsView.Load(c.app, c.logs, mode)
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
 		case <-c.doneChan:
 			mode = view.ModeParseTestsFinished
 			ticker.Stop()
-			c.testsView.Load(c.app, c.logs, mode)
+			c.endTime = time.Now()
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
 		}
 
 		c.app.Draw()

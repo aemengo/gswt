@@ -13,6 +13,7 @@ type Logs struct {
 
 	SelectedStepChan     chan int
 	ToggleModeChan       chan int
+	UserDidScrollChan    chan TxtMsg
 	EscapeLogsChan       chan bool
 	EscapeLogsDetailChan chan bool
 }
@@ -23,14 +24,15 @@ func NewLogs() *Logs {
 
 		SelectedStepChan:     make(chan int),
 		ToggleModeChan:       make(chan int),
+		UserDidScrollChan:    make(chan TxtMsg),
 		EscapeLogsChan:       make(chan bool),
 		EscapeLogsDetailChan: make(chan bool),
 	}
 }
 
-func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, logs model.Logs, selectedIDs ...int) {
+func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, logs model.Logs, detailText string, selectedRows ...Selection) {
 	commitList := c.buildTasksList(checks)
-	logsDetail := c.buildLogs(mode, checks, logs, selectedIDs...)
+	logsDetail := c.buildLogs(mode, checks, logs, selectedRows...)
 
 	flex := tview.NewFlex()
 
@@ -38,17 +40,26 @@ func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, l
 	case ModeChooseChecks:
 		flex.AddItem(commitList, 0, 1, true)
 		flex.AddItem(logsDetail, 0, 4, false)
-	case ModeParseLogsFullScreen:
-		flex.AddItem(logsDetail, 0, 1, true)
 	default:
 		flex.AddItem(commitList, 0, 1, false)
 		flex.AddItem(logsDetail, 0, 4, true)
 	}
 
-	app.SetRoot(flex, true)
+	switch mode {
+	case ModeParseLogsFuller:
+		detail := c.buildDetailTextView(detailText)
+		wrapperFlex := tview.NewFlex().
+			SetDirection(tview.FlexRow).
+			AddItem(flex, 0, 1, true).
+			AddItem(detail, 5, 0, false)
+
+		app.SetRoot(wrapperFlex, true)
+	default:
+		app.SetRoot(flex, true)
+	}
 }
 
-func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, selectedIDs ...int) tview.Primitive {
+func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, selectedRows ...Selection) tview.Primitive {
 	escHandler := func(key tcell.Key) {
 		c.EscapeLogsDetailChan <- true
 	}
@@ -61,8 +72,26 @@ func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, sel
 		c.ToggleModeChan <- mode
 	}
 
+	selectionChangedHandler := func(txt string, row int) {
+		if mode != ModeParseLogsFuller {
+			return
+		}
+
+		c.UserDidScrollChan <- TxtMsg{
+			Msg: txt,
+			Row: row,
+		}
+
+	}
+
 	if utils.ShouldShowLogs(checks.Selected) {
-		return logsDetailView(logs, escHandler, selectedHandler, enterHandler, selectedIDs...)
+		return logsDetailView(
+			logs,
+			escHandler,
+			selectedHandler,
+			enterHandler,
+			selectionChangedHandler,
+			selectedRows...)
 	} else {
 		txtView := tview.NewTextView()
 		txtView.
@@ -116,6 +145,16 @@ func (c *Logs) buildTasksList(checks model.CheckSuite) *tview.List {
 			c.EscapeLogsChan <- true
 		})
 	return list
+}
+
+func (c *Logs) buildDetailTextView(detailText string) *tview.TextView {
+	tv := tview.NewTextView()
+	tv.SetDynamicColors(true).
+		SetTextAlign(tview.AlignLeft).
+		SetTextColor(tcell.ColorLightGray).
+		SetBackgroundColor(viewBackgroundColor)
+	tv.SetText(detailText)
+	return tv
 }
 
 func (c *Logs) listItemSelectedFunc(chkSuite model.CheckSuite, selected *github.CheckRun) func() {

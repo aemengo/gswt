@@ -4,7 +4,14 @@ const (
 	ModeChooseCommits = iota
 	ModeChooseChecks
 	ModeParseLogs
-	ModeParseLogsFullScreen
+	ModeParseLogsFuller
 	ModeParseTestsRunning
 	ModeParseTestsFinished
+	ModeParseTests
+	ModeParseTestsFuller
 )
+
+type TxtMsg struct {
+	Msg string
+	Row int
+}
