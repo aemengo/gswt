@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Parser struct {
@@ -27,16 +28,18 @@ type Parser struct {
 	mainTestRunName string
 	mainTestLines   []string
 
-	doneChan        chan bool
-	stepUpdatedChan chan bool
+	doneChan       chan bool
+	testSuiteChan  chan TestSuite
+	testSuiteIndex int
 }
 
-func NewParser(stepUpdatedChan chan bool, doneChan chan bool) *Parser {
+func NewParser(testSuiteChan chan TestSuite, doneChan chan bool) *Parser {
 	return &Parser{
 		suiteIndexMapping: map[string]int{},
 		runIndexMapping:   map[string]map[string]int{},
-		stepUpdatedChan:   stepUpdatedChan,
+		testSuiteChan:     testSuiteChan,
 		doneChan:          doneChan,
+		testSuiteIndex:    0,
 
 		suiteMatcher:  regexp.MustCompile(`^Suite: .+$`),
 		tallyMatcher:  regexp.MustCompile(`^Passed: \d+ | Failed: \d+ | Skipped: \d+$`),
@@ -54,16 +57,23 @@ func (p *Parser) ParseGoTestStep(id *int, step *Step) {
 	}
 }
 
-func (p *Parser) ParseGoTestStdin(id *int, step *Step, stdin io.Reader) {
-	scanner := bufio.NewScanner(stdin)
+func (p *Parser) ParseGoTestStdin(stdin io.Reader) {
+	var (
+		id      = 1
+		scanner = bufio.NewScanner(stdin)
+		step    = Step{}
+	)
 
 	for scanner.Scan() {
-		p.parseGoTestLine(id, step, scanner.Text())
+		p.parseGoTestLine(&id, &step, scanner.Text())
 	}
 
 	// ignore the Err() on purpose
 	// _ = scanner.Err()
 	if p.doneChan != nil {
+		p.sendTestSuites(&step)
+
+		time.Sleep(time.Millisecond)
 		p.doneChan <- true
 	}
 }
@@ -96,10 +106,6 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 			}
 		}
 
-		if p.stepUpdatedChan != nil {
-			p.stepUpdatedChan <- true
-		}
-
 		return
 	}
 
@@ -130,8 +136,10 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 		p.currentTestRun = runMatches[1]
 
 		if p.currentTestSuite == "" {
+			// This represents parsing a new set of test suites
 			p.mainTestRunName = p.currentTestRun
 			p.mainTestLines = []string{}
+			p.sendTestSuites(step)
 			return
 		}
 
@@ -199,4 +207,16 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 			}
 		}
 	}
+}
+
+func (p *Parser) sendTestSuites(step *Step) {
+	var i int
+
+	for i = p.testSuiteIndex; i <= len(step.TestSuites)-1; i++ {
+		if p.testSuiteChan != nil {
+			p.testSuiteChan <- step.TestSuites[i]
+		}
+	}
+
+	p.testSuiteIndex = i
 }

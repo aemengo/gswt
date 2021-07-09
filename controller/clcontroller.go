@@ -10,13 +10,13 @@ import (
 )
 
 type CLController struct {
-	app             *tview.Application
-	stdin           io.Reader
-	stepUpdatedChan chan bool
-	doneChan        chan bool
-	testsView       *view.Tests
-	logger          *log.Logger
-	logs            model.Logs
+	app           *tview.Application
+	stdin         io.Reader
+	testSuiteChan chan model.TestSuite
+	doneChan      chan bool
+	testsView     *view.Tests
+	logger        *log.Logger
+	logs          model.Logs
 
 	startTime time.Time
 	endTime   time.Time
@@ -24,13 +24,13 @@ type CLController struct {
 
 func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader) *CLController {
 	return &CLController{
-		app:             app,
-		logger:          logger,
-		stdin:           stdin,
-		stepUpdatedChan: make(chan bool, 1),
-		doneChan:        make(chan bool, 1),
-		testsView:       view.NewTests(),
-		startTime:       time.Now(),
+		app:           app,
+		logger:        logger,
+		stdin:         stdin,
+		testSuiteChan: make(chan model.TestSuite, 1),
+		doneChan:      make(chan bool, 1),
+		testsView:     view.NewTests(),
+		startTime:     time.Now(),
 		logs: model.Logs{
 			model.Step{
 				Title:    "go test",
@@ -42,13 +42,11 @@ func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader
 }
 
 func (c *CLController) Run() error {
-	var id = 1
-
 	c.testsView.Load(c.app, c.logs, view.ModeParseTestsRunning, view.ModeParseTests, time.Now().Sub(c.startTime), "")
 
 	go c.handleEvents()
 
-	go model.NewParser(c.stepUpdatedChan, c.doneChan).ParseGoTestStdin(&id, &c.logs[0], c.stdin)
+	go model.NewParser(c.testSuiteChan, c.doneChan).ParseGoTestStdin(c.stdin)
 
 	return c.app.Run()
 }
@@ -99,8 +97,9 @@ func (c *CLController) handleEvents() {
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
 
 		// when parsing updates
-		case <-c.stepUpdatedChan:
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
+		case testSuite := <-c.testSuiteChan:
+			// no need to reload here because our ticker.C will do so
+			c.logs[0].TestSuites = append(c.logs[0].TestSuites, testSuite)
 		case <-c.doneChan:
 			mode = view.ModeParseTestsFinished
 			ticker.Stop()

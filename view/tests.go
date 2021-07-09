@@ -29,7 +29,7 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int, displayM
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(statusBar, 1, 0, false).
-		AddItem(table, 0, 1, mode == ModeParseTestsFinished)
+		AddItem(table, 0, 1, true)
 
 	if displayMode == ModeParseTestsFuller {
 		detail := v.buildDetailTextView(detailText)
