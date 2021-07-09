@@ -12,6 +12,7 @@ type Tests struct {
 	SelectedStepChan      chan int
 	ToggleDisplayModeChan chan int
 	UserDidScrollChan     chan TxtMsg
+	statusBar             *tview.TextView
 }
 
 func NewTests() *Tests {
@@ -23,7 +24,7 @@ func NewTests() *Tests {
 }
 
 func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int, displayMode int, testDuration time.Duration, detailText string, selectedRows ...Selection) {
-	statusBar := v.buildStatusBar(mode, logs, testDuration)
+	statusBar := v.buildStatusBar()
 	table := v.buildTestsTable(logs, displayMode, selectedRows...)
 
 	flex := tview.NewFlex().
@@ -33,26 +34,32 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int, displayM
 
 	if displayMode == ModeParseTestsFuller {
 		detail := v.buildDetailTextView(detailText)
-
 		flex.AddItem(detail, 5, 0, false)
 	}
 
+	v.statusBar = statusBar
+	v.UpdateStatus(mode, logs, testDuration)
 	app.SetRoot(flex, true)
 }
 
-func (v *Tests) buildStatusBar(mode int, logs model.Logs, duration time.Duration) *tview.TextView {
+func (v *Tests) UpdateStatus(mode int, logs model.Logs, duration time.Duration) {
+	if v.statusBar == nil {
+		return
+	}
+
+	if mode == ModeParseTestsRunning {
+		v.statusBar.SetText(fmt.Sprintf("Running %s... (%s)", testsCount(logs), duration))
+	} else {
+		v.statusBar.SetText(fmt.Sprintf("Completed %s! (%s)", testsCount(logs), duration))
+	}
+}
+
+func (v *Tests) buildStatusBar() *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
 		SetTextAlign(tview.AlignRight).
 		SetTextColor(tcell.ColorLightGray).
 		SetBackgroundColor(viewBackgroundColor)
-
-	if mode == ModeParseTestsRunning {
-		tv.SetText(fmt.Sprintf("Running %s... (%s)", testsCount(logs), duration))
-	} else {
-		tv.SetText(fmt.Sprintf("Completed %s! (%s)", testsCount(logs), duration))
-	}
-
 	return tv
 }
 

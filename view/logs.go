@@ -64,19 +64,15 @@ func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, sel
 		c.EscapeLogsDetailChan <- true
 	}
 
-	selectedHandler := func(id int) {
-		c.SelectedStepChan <- id
-	}
-
 	enterHandler := func() {
 		c.ToggleModeChan <- mode
 	}
 
-	selectionChangedHandler := func(txt string, row int) {
-		if mode != ModeParseLogsFuller {
-			return
-		}
+	selectedHandler := func(id int) {
+		c.SelectedStepChan <- id
+	}
 
+	selectionChangedHandler := func(txt string, row int) {
 		c.UserDidScrollChan <- TxtMsg{
 			Msg: txt,
 			Row: row,

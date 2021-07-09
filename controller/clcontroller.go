@@ -85,7 +85,6 @@ func (c *CLController) handleEvents() {
 				displayMode = view.ModeParseTestsFuller
 			default:
 				displayMode = view.ModeParseTests
-				detailText = ""
 			}
 
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
@@ -98,12 +97,10 @@ func (c *CLController) handleEvents() {
 
 		// when ticker goes off
 		case <-ticker.C:
-			// TODO: fix timestamp display
-			// c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
+			c.testsView.UpdateStatus(mode, c.logs, testDuration())
 
 		// when parsing updates
 		case testSuite := <-c.testSuiteChan:
-			// no need to reload here because our ticker.C will do so
 			c.logs[0].TestSuites = append(c.logs[0].TestSuites, testSuite)
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 		case <-c.doneChan:

@@ -51,10 +51,11 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 		chkSuite  model.CheckSuite
 		commitSHA string
 
-		logs       model.Logs
-		logMode    = view.ModeParseLogs
-		selectedID = 0
-		detailText = ""
+		logs    model.Logs
+		logMode = view.ModeParseLogs
+
+		detailText string
+		selection  view.Selection
 	)
 
 	for {
@@ -99,24 +100,26 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
 
 		// when logs are toggled
-		case selectedID = <-c.logsView.SelectedStepChan:
+		case selectedID := <-c.logsView.SelectedStepChan:
 			logs.Toggle(selectedID)
-			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+
+			selection = view.Selection{Type: view.SelectionTypeID, Value: selectedID}
+			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
 		case m := <-c.logsView.ToggleModeChan:
 			switch m {
 			case view.ModeParseLogs:
 				logMode = view.ModeParseLogsFuller
 			default:
 				logMode = view.ModeParseLogs
-				detailText = ""
 			}
 
-			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
 
 		// when user scrolls
 		case msg := <-c.logsView.UserDidScrollChan:
 			detailText = msg.Msg
-			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, view.Selection{Type: view.SelectionTypeRow, Value: msg.Row})
+			selection = view.Selection{Type: view.SelectionTypeRow, Value: msg.Row}
+			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
 
 		// when ESC is pressed
 		case <-c.logsView.EscapeLogsDetailChan:
