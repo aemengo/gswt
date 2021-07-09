@@ -78,10 +78,6 @@ func (v *Tests) buildTestsTable(logs model.Logs, mode int, selectedRows ...Selec
 	}
 
 	selectionChangedHandler := func(txt string, row int) {
-		if mode != ModeParseTestsFuller {
-			return
-		}
-
 		v.UserDidScrollChan <- TxtMsg{
 			Msg: txt,
 			Row: row,

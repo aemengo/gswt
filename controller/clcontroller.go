@@ -56,8 +56,9 @@ func (c *CLController) handleEvents() {
 		mode        = view.ModeParseTestsRunning
 		displayMode = view.ModeParseTests
 		ticker      = time.NewTicker(250 * time.Millisecond)
-		detailText  = ""
-		selectedID  = 0
+
+		detailText string
+		selection  view.Selection
 
 		testDuration = func() time.Duration {
 			if !c.endTime.Equal(time.Time{}) {
@@ -71,9 +72,11 @@ func (c *CLController) handleEvents() {
 	for {
 		select {
 		// when tests are toggled
-		case selectedID = <-c.testsView.SelectedStepChan:
+		case selectedID := <-c.testsView.SelectedStepChan:
 			c.logs.Toggle(selectedID)
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+
+			selection = view.Selection{Type: view.SelectionTypeID, Value: selectedID}
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 
 		// when display mode is toggled
 		case m := <-c.testsView.ToggleDisplayModeChan:
@@ -85,26 +88,29 @@ func (c *CLController) handleEvents() {
 				detailText = ""
 			}
 
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, view.Selection{Type: view.SelectionTypeID, Value: selectedID})
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 
 		// when user scrolls
 		case msg := <-c.testsView.UserDidScrollChan:
 			detailText = msg.Msg
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, view.Selection{Type: view.SelectionTypeRow, Value: msg.Row})
+			selection = view.Selection{Type: view.SelectionTypeRow, Value: msg.Row}
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 
 		// when ticker goes off
 		case <-ticker.C:
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
+			// TODO: fix timestamp display
+			// c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 
 		// when parsing updates
 		case testSuite := <-c.testSuiteChan:
 			// no need to reload here because our ticker.C will do so
 			c.logs[0].TestSuites = append(c.logs[0].TestSuites, testSuite)
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 		case <-c.doneChan:
 			mode = view.ModeParseTestsFinished
 			ticker.Stop()
 			c.endTime = time.Now()
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText)
+			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
 		}
 
 		c.app.Draw()

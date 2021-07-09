@@ -43,11 +43,12 @@ func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHan
 
 	if len(selections) != 0 {
 		s := selections[0]
+
 		switch s.Type {
 		case SelectionTypeID:
 			r := idRowMapping[s.Value]
 			table.Select(r, 1)
-		default:
+		case SelectionTypeRow:
 			table.Select(s.Value, 1)
 		}
 	} else {
