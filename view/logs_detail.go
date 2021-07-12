@@ -125,16 +125,20 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 		return
 	}
 
-	goFileRegex := regexp.MustCompile(`(\S+\.go:\d+:)`)
-	errRegex := regexp.MustCompile(`(?i)^\s+error:`)
+	var (
+		diffRemoveRegex = regexp.MustCompile(`^\s*-`)
+		diffAddRegex    = regexp.MustCompile(`^\s*\+`)
+		goFileRegex     = regexp.MustCompile(`(\S+\.go:\d+:)`)
+	)
 
-	for i, line := range run.Lines {
+	for _, line := range run.Lines {
 		txt := tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))
 
-		if i == len(run.Lines)-1 {
-			if errRegex.MatchString(txt) {
-				txt = "[red]" + txt
-			}
+		switch {
+		case diffRemoveRegex.MatchString(line):
+			txt = "[red]" + txt
+		case diffAddRegex.MatchString(line):
+			txt = "[green]" + txt
 		}
 
 		table.SetCell(*row, 0,
@@ -236,15 +240,24 @@ func showLogLines(table *tview.Table, step model.Step, row *int) {
 		return
 	}
 
-	for i, line := range step.Lines {
-		txt := fmt.Sprintf("   %s %s",
-			tview.TranslateANSI(boldYellow.Sprint(strconv.Itoa(i+1))),
-			line)
+	diffRemoveRegex := regexp.MustCompile(`^\s*-`)
+	diffAddRegex := regexp.MustCompile(`^\s*\+`)
 
-		if !step.Success && i == len(step.Lines)-1 {
-			txt = fmt.Sprintf("   %s %s",
-				tview.TranslateANSI(boldYellow.Sprint(strconv.Itoa(i+1))),
-				tview.TranslateANSI(boldRed.Sprint(line)))
+	for i, line := range step.Lines {
+		var (
+			txt    string
+			prefix = fmt.Sprintf("   %s ", tview.TranslateANSI(boldYellow.Sprint(strconv.Itoa(i+1))))
+		)
+
+		switch {
+		case diffRemoveRegex.MatchString(line):
+			txt = prefix + "[red]" + line
+		case diffAddRegex.MatchString(line):
+			txt = prefix + "[green]" + line
+		case !step.Success && i == len(step.Lines)-1:
+			txt = prefix + "[red::b]" + line
+		default:
+			txt = prefix + line
 		}
 
 		table.SetCell(*row, 0,
