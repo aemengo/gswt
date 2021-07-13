@@ -60,7 +60,7 @@ func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults)
 		SetBorder(true).
 		SetTitleColor(tcell.ColorDimGray).
 		SetBorderPadding(1, 1, 2, 2).
-		SetTitle(tview.TranslateANSI(bold.Sprint("| checks |"))).
+		SetTitle("[::b]| checks |").
 		SetBorderColor(tcell.ColorDimGray).
 		SetBorderAttributes(tcell.AttrBold).
 		SetBackgroundColor(viewBackgroundColor)
@@ -161,7 +161,7 @@ func (c *Checks) buildCommitList(commits []*github.RepositoryCommit, selectedCom
 		SetSelectedTextColor(tcell.ColorMediumTurquoise).
 		SetSelectedBackgroundColor(tcell.ColorDarkSlateGray).
 		SetSecondaryTextColor(tcell.ColorDimGray).
-		SetTitle(tview.TranslateANSI(bold.Sprint("| commits |"))).
+		SetTitle("[::b]| commits |").
 		SetBorder(true).
 		SetBorderAttributes(tcell.AttrBold).
 		SetTitleAlign(tview.AlignLeft).

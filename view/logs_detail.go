@@ -6,7 +6,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -97,10 +96,10 @@ func showTitleLine(table *tview.Table, step model.Step, index int, row *int, row
 		icon = " ▼ "
 	}
 
-	txt := cyan.Sprintf("Step %d: %s", index+1, truncate(step.Title))
+	txt := fmt.Sprintf("[mediumturquoise]Step %d: %s", index+1, truncate(step.Title))
 
 	table.SetCell(*row, 1,
-		tview.NewTableCell(icon+tview.TranslateANSI(txt)).
+		tview.NewTableCell(icon+txt).
 			SetTextColor(tcell.ColorDarkGray).
 			SetAttributes(tcell.AttrBold).
 			SetSelectable(true))
@@ -132,7 +131,7 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 	)
 
 	for _, line := range run.Lines {
-		txt := tview.TranslateANSI(goFileRegex.ReplaceAllString(line, cyan.Sprint("$1")))
+		txt := goFileRegex.ReplaceAllString(line, "[mediumturquoise]$1[-]")
 
 		switch {
 		case diffRemoveRegex.MatchString(line):
@@ -146,7 +145,7 @@ func showTestLogLines(table *tview.Table, run model.TestRun, row *int) {
 				SetSelectable(false))
 
 		table.SetCell(*row, 1,
-			tview.NewTableCell("        "+txt).
+			tview.NewTableCell(tview.TranslateANSI("        "+txt)).
 				SetTextColor(tcell.ColorDarkGray).
 				SetSelectable(true))
 
@@ -206,12 +205,14 @@ func showTestSuites(table *tview.Table, step model.Step, row *int, rowIDMapping 
 			icon = "   ▼ "
 		}
 
+		txt := failureRegex.ReplaceAllString(ts.Title, "[red::b]$1[-:-:-]")
+
 		table.SetCell(*row, 0,
 			tview.NewTableCell("").
 				SetSelectable(false))
 
 		table.SetCell(*row, 1,
-			tview.NewTableCell(icon+tview.TranslateANSI(failureRegex.ReplaceAllString(ts.Title, boldRed.Sprint("$1")))).
+			tview.NewTableCell(icon+fmt.Sprintf("[darkgray]"+txt+"[darkgray]")).
 				SetTextColor(tcell.ColorDarkGray).
 				SetSelectable(true))
 
@@ -246,7 +247,7 @@ func showLogLines(table *tview.Table, step model.Step, row *int) {
 	for i, line := range step.Lines {
 		var (
 			txt    string
-			prefix = fmt.Sprintf("   %s ", tview.TranslateANSI(boldYellow.Sprint(strconv.Itoa(i+1))))
+			prefix = fmt.Sprintf("   [yellow::b]%d[-:-:-] ", i+1)
 		)
 
 		switch {
@@ -265,7 +266,7 @@ func showLogLines(table *tview.Table, step model.Step, row *int) {
 				SetSelectable(false))
 
 		table.SetCell(*row, 1,
-			tview.NewTableCell(txt).
+			tview.NewTableCell(tview.TranslateANSI(txt)).
 				SetTextColor(tcell.ColorDarkGray).
 				SetSelectable(true))
 

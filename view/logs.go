@@ -92,7 +92,7 @@ func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, sel
 		txtView := tview.NewTextView()
 		txtView.
 			SetDynamicColors(true).
-			SetText(tview.TranslateANSI(bold.Sprint("Sorry, logs only supported for 'success' or 'failure' runs"))).
+			SetText("[::b]Sorry, logs only supported for 'success' or 'failure' runs").
 			SetTextColor(tcell.ColorDarkGray).
 			SetDoneFunc(escHandler).
 			SetBorder(true).
@@ -112,7 +112,7 @@ func (c *Logs) buildTasksList(checks model.CheckSuite) *tview.List {
 		SetSelectedTextColor(tcell.ColorMediumTurquoise).
 		SetSelectedBackgroundColor(tcell.ColorDarkSlateGray).
 		SetSecondaryTextColor(tcell.ColorDimGray).
-		SetTitle(tview.TranslateANSI(bold.Sprint("| tasks |"))).
+		SetTitle("[::b]| tasks |").
 		SetBorder(true).
 		SetBorderAttributes(tcell.AttrBold).
 		SetTitleAlign(tview.AlignLeft).
@@ -167,13 +167,13 @@ func checkRunStatus(check *github.CheckRun) string {
 	case "completed":
 		switch check.GetConclusion() {
 		case "success":
-			return tview.TranslateANSI(green.Sprint("✔︎ ")) + check.GetConclusion()
+			return "[green]✔︎ [-]" + check.GetConclusion()
 		case "skipped":
 			return "• " + check.GetConclusion()
 		default:
-			return tview.TranslateANSI(red.Sprint("✘ ")) + check.GetConclusion()
+			return "[red]✘ [-]" + check.GetConclusion()
 		}
 	default:
-		return tview.TranslateANSI(yellow.Sprint("• ")) + check.GetStatus()
+		return "[yellow]• [-]" + check.GetStatus()
 	}
 }
