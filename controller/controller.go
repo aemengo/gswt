@@ -5,6 +5,7 @@ import (
 	"github.com/aemengo/gswt/service"
 	"github.com/aemengo/gswt/utils"
 	"github.com/aemengo/gswt/view"
+	"github.com/gdamore/tcell/v2"
 	"github.com/google/go-github/v35/github"
 	"github.com/rivo/tview"
 	"log"
@@ -58,55 +59,67 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 		selection  view.Selection
 	)
 
-	for {
-		select {
-		// AUTOMATIC EVENTS
-		// when workflows are done loading
-		case <-c.svc.FetchChan:
-			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
+	// HANDLE USER EVENTS
+	// these are unique because app.Draw() cannot be called for these
+	// otherwise race conditions will happen
+	// checksView
+	c.checksView.SetHandlers(
+		func(suite model.CheckSuite) {
+			chkSuite = suite
 
-		// USER EVENTS
-		// when commits are picked
-		case commitSHA = <-c.checksView.SelectedCommitChan:
+			if utils.ShouldShowLogs(chkSuite.Selected) {
+				var err error
+				logs, err = c.fetchLogs(chkSuite.Selected)
+				if err != nil {
+					c.logger.Println(err)
+					return
+				}
+			}
+
+			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
+		},
+		func(key tcell.Key) {
+			c.checksView.Load(c.app, view.ModeChooseCommits, commits, checkRuns, commitSHA)
+		},
+		func(sha string) {
+			commitSHA = sha
+
 			var err error
 			checkRuns, err = c.svc.CheckRuns(commitSHA)
 			if err != nil {
 				c.logger.Println(err)
-				continue
+				return
 			}
 
 			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
-		// when checks are picked
-		case chkSuite = <-c.checksView.CheckSuiteChan:
+		},
+	)
+
+	// logsView
+	c.logsView.SetHandlers(
+		func(suite model.CheckSuite) {
+			chkSuite = suite
+
 			if utils.ShouldShowLogs(chkSuite.Selected) {
 				var err error
 				logs, err = c.fetchLogs(chkSuite.Selected)
 				if err != nil {
 					c.logger.Println(err)
-					continue
+					return
 				}
 			}
 
 			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
-		case chkSuite = <-c.logsView.LogsCheckSuiteChan:
-			if utils.ShouldShowLogs(chkSuite.Selected) {
-				var err error
-				logs, err = c.fetchLogs(chkSuite.Selected)
-				if err != nil {
-					c.logger.Println(err)
-					continue
-				}
-			}
-
-			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
-		// when logs are toggled
-		case selectedID := <-c.logsView.SelectedStepChan:
-			logs.Toggle(selectedID)
-
-			selection = view.Selection{Type: view.SelectionTypeID, Value: selectedID}
-			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
-		case m := <-c.logsView.ToggleModeChan:
-			switch m {
+		},
+		func() {
+			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
+		},
+		func(key tcell.Key) {
+			logMode = view.ModeParseLogs
+			c.logsView.Load(c.app, view.ModeChooseChecks, chkSuite, logs, detailText)
+		},
+		func() {
+			switch logMode {
 			case view.ModeParseLogs:
 				logMode = view.ModeParseLogsFuller
 			default:
@@ -114,19 +127,24 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			}
 
 			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
-		// when user scrolls
-		case msg := <-c.logsView.UserDidScrollChan:
-			detailText = msg.Msg
-			selection = view.Selection{Type: view.SelectionTypeRow, Value: msg.Row}
+		},
+		func(id int) {
+			logs.Toggle(id)
+			selection = view.Selection{Type: view.SelectionTypeID, Value: id}
 			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
-		// when ESC is pressed
-		case <-c.logsView.EscapeLogsDetailChan:
-			logMode = view.ModeParseLogs
-			c.logsView.Load(c.app, view.ModeChooseChecks, chkSuite, logs, detailText)
-		case <-c.checksView.EscapeCheckListChan:
-			c.checksView.Load(c.app, view.ModeChooseCommits, commits, checkRuns, commitSHA)
-		case <-c.logsView.EscapeLogsChan:
-			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
+		},
+		func(txt string, row int) {
+			detailText = txt
+			selection = view.Selection{Type: view.SelectionTypeRow, Value: row}
+			c.logsView.UpdateDetail(detailText)
+		})
+
+	// HANDLE AUTOMATIC EVENTS
+	for {
+		select {
+		// when workflows are done loading
+		case <-c.svc.FetchChan:
+			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
 		}
 
 		c.app.Draw()

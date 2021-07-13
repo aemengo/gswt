@@ -9,24 +9,24 @@ import (
 )
 
 type Logs struct {
-	LogsCheckSuiteChan chan model.CheckSuite
+	checkSuiteHandler       func(suite model.CheckSuite)
+	escLogsHandler          func()
+	escLogsDetailHandler    func(key tcell.Key)
+	enterHandler            func()
+	selectedHandler         func(id int)
+	selectionChangedHandler func(txt string, row int)
 
-	SelectedStepChan     chan int
-	ToggleModeChan       chan int
-	UserDidScrollChan    chan TxtMsg
-	EscapeLogsChan       chan bool
-	EscapeLogsDetailChan chan bool
+	detailTV *tview.TextView
 }
 
 func NewLogs() *Logs {
 	return &Logs{
-		LogsCheckSuiteChan: make(chan model.CheckSuite),
-
-		SelectedStepChan:     make(chan int),
-		ToggleModeChan:       make(chan int),
-		UserDidScrollChan:    make(chan TxtMsg),
-		EscapeLogsChan:       make(chan bool),
-		EscapeLogsDetailChan: make(chan bool),
+		checkSuiteHandler:       func(suite model.CheckSuite) {},
+		escLogsHandler:          func() {},
+		escLogsDetailHandler:    func(key tcell.Key) {},
+		enterHandler:            func() {},
+		selectedHandler:         func(id int) {},
+		selectionChangedHandler: func(txt string, row int) {},
 	}
 }
 
@@ -47,46 +47,47 @@ func (c *Logs) Load(app *tview.Application, mode int, checks model.CheckSuite, l
 
 	switch mode {
 	case ModeParseLogsFuller:
-		detail := c.buildDetailTextView(detailText)
+		detailTV := c.buildDetailTextView()
+
+		c.detailTV = detailTV
+		c.UpdateDetail(detailText)
 		wrapperFlex := tview.NewFlex().
 			SetDirection(tview.FlexRow).
 			AddItem(flex, 0, 1, true).
-			AddItem(detail, 5, 0, false)
+			AddItem(detailTV, 5, 0, false)
 
 		app.SetRoot(wrapperFlex, true)
 	default:
+		c.detailTV = nil
 		app.SetRoot(flex, true)
 	}
 }
 
+func (c *Logs) SetHandlers(checkSuiteHandler func(suite model.CheckSuite), escLogsHandler func(), escLogsDetailHandler func(key tcell.Key), enterHandler func(), selectedHandler func(id int), selectionChangedHandler func(txt string, row int)) {
+	c.checkSuiteHandler = checkSuiteHandler
+	c.escLogsHandler = escLogsHandler
+	c.escLogsDetailHandler = escLogsDetailHandler
+	c.enterHandler = enterHandler
+	c.selectedHandler = selectedHandler
+	c.selectionChangedHandler = selectionChangedHandler
+}
+
+func (c *Logs) UpdateDetail(txt string) {
+	if c.detailTV == nil {
+		return
+	}
+
+	c.detailTV.SetText(txt)
+}
+
 func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, selectedRows ...Selection) tview.Primitive {
-	escHandler := func(key tcell.Key) {
-		c.EscapeLogsDetailChan <- true
-	}
-
-	enterHandler := func() {
-		c.ToggleModeChan <- mode
-	}
-
-	selectedHandler := func(id int) {
-		c.SelectedStepChan <- id
-	}
-
-	selectionChangedHandler := func(txt string, row int) {
-		c.UserDidScrollChan <- TxtMsg{
-			Msg: txt,
-			Row: row,
-		}
-
-	}
-
 	if utils.ShouldShowLogs(checks.Selected) {
 		return logsDetailView(
 			logs,
-			escHandler,
-			selectedHandler,
-			enterHandler,
-			selectionChangedHandler,
+			c.escLogsDetailHandler,
+			c.selectedHandler,
+			c.enterHandler,
+			c.selectionChangedHandler,
 			selectedRows...)
 	} else {
 		txtView := tview.NewTextView()
@@ -94,7 +95,7 @@ func (c *Logs) buildLogs(mode int, checks model.CheckSuite, logs model.Logs, sel
 			SetDynamicColors(true).
 			SetText("[::b]Sorry, logs only supported for 'success' or 'failure' runs").
 			SetTextColor(tcell.ColorDarkGray).
-			SetDoneFunc(escHandler).
+			SetDoneFunc(c.escLogsDetailHandler).
 			SetBorder(true).
 			SetTitleColor(tcell.ColorDimGray).
 			SetBorderPadding(1, 1, 2, 2).
@@ -137,28 +138,23 @@ func (c *Logs) buildTasksList(checks model.CheckSuite) *tview.List {
 
 	list.
 		SetCurrentItem(selectedIndex).
-		SetDoneFunc(func() {
-			c.EscapeLogsChan <- true
-		})
+		SetDoneFunc(c.escLogsHandler)
 	return list
 }
 
-func (c *Logs) buildDetailTextView(detailText string) *tview.TextView {
+func (c *Logs) buildDetailTextView() *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(tcell.ColorLightGray).
 		SetBackgroundColor(viewBackgroundColor)
-	tv.SetText(detailText)
 	return tv
 }
 
 func (c *Logs) listItemSelectedFunc(chkSuite model.CheckSuite, selected *github.CheckRun) func() {
 	return func() {
-		c.LogsCheckSuiteChan <- model.CheckSuite{
-			All:      chkSuite.All,
-			Selected: selected,
-		}
+		suite := model.CheckSuite{All: chkSuite.All, Selected: selected}
+		c.checkSuiteHandler(suite)
 	}
 }
 

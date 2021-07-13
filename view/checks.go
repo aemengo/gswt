@@ -14,20 +14,18 @@ import (
 type Checks struct {
 	svc *service.Service
 
-	CheckSuiteChan chan model.CheckSuite
-
-	EscapeCheckListChan chan bool
-	SelectedCommitChan  chan string
+	checkSuiteHandler     func(suite model.CheckSuite)
+	escChecksHandler      func(key tcell.Key)
+	selectedCommitHandler func(sha string)
 }
 
 func NewChecks(svc *service.Service) *Checks {
 	return &Checks{
 		svc: svc,
 
-		CheckSuiteChan: make(chan model.CheckSuite),
-
-		EscapeCheckListChan: make(chan bool),
-		SelectedCommitChan:  make(chan string),
+		checkSuiteHandler:     func(suite model.CheckSuite) {},
+		escChecksHandler:      func(key tcell.Key) {},
+		selectedCommitHandler: func(sha string) {},
 	}
 }
 
@@ -46,6 +44,12 @@ func (c *Checks) Load(app *tview.Application, mode int, commits []*github.Reposi
 	}
 
 	app.SetRoot(flex, true)
+}
+
+func (c *Checks) SetHandlers(checkSuiteHandler func(suite model.CheckSuite), escChecksHandler func(key tcell.Key), selectedCommitHandler func(sha string)) {
+	c.checkSuiteHandler = checkSuiteHandler
+	c.escChecksHandler = escChecksHandler
+	c.selectedCommitHandler = selectedCommitHandler
 }
 
 func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults) *tview.Table {
@@ -136,19 +140,15 @@ func (c *Checks) buildCheckRunsTable(checkRunsList *github.ListCheckRunsResults)
 
 	table.
 		SetSelectable(true, false).
-		SetDoneFunc(func(key tcell.Key) {
-			c.EscapeCheckListChan <- true
-		}).
+		SetDoneFunc(c.escChecksHandler).
 		SetSelectedFunc(func(row, column int) {
 			selected := checkRowMapping[row]
 			if selected == nil {
 				return
 			}
 
-			c.CheckSuiteChan <- model.CheckSuite{
-				All:      matchesCheckSuite(checkRunsList, selected),
-				Selected: selected,
-			}
+			suite := model.CheckSuite{All: matchesCheckSuite(checkRunsList, selected), Selected: selected}
+			c.checkSuiteHandler(suite)
 		})
 
 	return table
@@ -197,7 +197,7 @@ func (c *Checks) buildCommitList(commits []*github.RepositoryCommit, selectedCom
 
 func (c *Checks) listItemSelectedFunc(sha string) func() {
 	return func() {
-		c.SelectedCommitChan <- sha
+		c.selectedCommitHandler(sha)
 	}
 }
 
