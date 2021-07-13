@@ -9,17 +9,18 @@ import (
 )
 
 type Tests struct {
-	SelectedStepChan      chan int
-	ToggleDisplayModeChan chan int
-	UserDidScrollChan     chan TxtMsg
-	statusBar             *tview.TextView
+	enterHandler            func()
+	selectedHandler         func(id int)
+	selectionChangedHandler func(txt string, row int)
+	statusBar               *tview.TextView
+	detailTV                *tview.TextView
 }
 
 func NewTests() *Tests {
 	return &Tests{
-		SelectedStepChan:      make(chan int),
-		ToggleDisplayModeChan: make(chan int),
-		UserDidScrollChan:     make(chan TxtMsg),
+		enterHandler:            func() {},
+		selectedHandler:         func(id int) {},
+		selectionChangedHandler: func(txt string, row int) {},
 	}
 }
 
@@ -32,14 +33,26 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int, displayM
 		AddItem(statusBar, 1, 0, false).
 		AddItem(table, 0, 1, true)
 
-	if displayMode == ModeParseTestsFuller {
-		detail := v.buildDetailTextView(detailText)
-		flex.AddItem(detail, 5, 0, false)
+	switch displayMode {
+	case ModeParseTestsFuller:
+		detailTV := v.buildDetailTextView()
+
+		v.detailTV = detailTV
+		v.UpdateDetail(detailText)
+		flex.AddItem(detailTV, 5, 0, false)
+	default:
+		v.detailTV = nil
 	}
 
 	v.statusBar = statusBar
 	v.UpdateStatus(mode, logs, testDuration)
 	app.SetRoot(flex, true)
+}
+
+func (v *Tests) SetHandlers(enterHandler func(), selectedHandler func(id int), selectionChangedHandler func(txt string, row int)) {
+	v.enterHandler = enterHandler
+	v.selectedHandler = selectedHandler
+	v.selectionChangedHandler = selectionChangedHandler
 }
 
 func (v *Tests) UpdateStatus(mode int, logs model.Logs, duration time.Duration) {
@@ -54,6 +67,14 @@ func (v *Tests) UpdateStatus(mode int, logs model.Logs, duration time.Duration) 
 	}
 }
 
+func (v *Tests) UpdateDetail(txt string) {
+	if v.detailTV == nil {
+		return
+	}
+
+	v.detailTV.SetText(txt)
+}
+
 func (v *Tests) buildStatusBar() *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
@@ -63,40 +84,22 @@ func (v *Tests) buildStatusBar() *tview.TextView {
 	return tv
 }
 
-func (v *Tests) buildDetailTextView(detailText string) *tview.TextView {
+func (v *Tests) buildDetailTextView() *tview.TextView {
 	tv := tview.NewTextView()
 	tv.SetDynamicColors(true).
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(tcell.ColorLightGray).
 		SetBackgroundColor(viewBackgroundColor)
-	tv.SetText(detailText)
 	return tv
 }
 
 func (v *Tests) buildTestsTable(logs model.Logs, mode int, selectedRows ...Selection) *tview.Table {
-	escHandler := func(key tcell.Key) {}
-
-	enterHandler := func() {
-		v.ToggleDisplayModeChan <- mode
-	}
-
-	selectedHandler := func(id int) {
-		v.SelectedStepChan <- id
-	}
-
-	selectionChangedHandler := func(txt string, row int) {
-		v.UserDidScrollChan <- TxtMsg{
-			Msg: txt,
-			Row: row,
-		}
-	}
-
 	return logsDetailView(
 		logs,
-		escHandler,
-		selectedHandler,
-		enterHandler,
-		selectionChangedHandler,
+		func(key tcell.Key) {},
+		v.selectedHandler,
+		v.enterHandler,
+		v.selectionChangedHandler,
 		selectedRows...)
 }
 

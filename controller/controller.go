@@ -60,10 +60,12 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 
 	for {
 		select {
+		// AUTOMATIC EVENTS
 		// when workflows are done loading
 		case <-c.svc.FetchChan:
 			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns)
 
+		// USER EVENTS
 		// when commits are picked
 		case commitSHA = <-c.checksView.SelectedCommitChan:
 			var err error
@@ -74,7 +76,6 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			}
 
 			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
-
 		// when checks are picked
 		case chkSuite = <-c.checksView.CheckSuiteChan:
 			if utils.ShouldShowLogs(chkSuite.Selected) {
@@ -98,7 +99,6 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			}
 
 			c.logsView.Load(c.app, view.ModeParseLogs, chkSuite, logs, detailText)
-
 		// when logs are toggled
 		case selectedID := <-c.logsView.SelectedStepChan:
 			logs.Toggle(selectedID)
@@ -114,13 +114,11 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			}
 
 			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
-
 		// when user scrolls
 		case msg := <-c.logsView.UserDidScrollChan:
 			detailText = msg.Msg
 			selection = view.Selection{Type: view.SelectionTypeRow, Value: msg.Row}
 			c.logsView.Load(c.app, logMode, chkSuite, logs, detailText, selection)
-
 		// when ESC is pressed
 		case <-c.logsView.EscapeLogsDetailChan:
 			logMode = view.ModeParseLogs

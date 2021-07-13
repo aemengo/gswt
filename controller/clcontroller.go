@@ -69,18 +69,12 @@ func (c *CLController) handleEvents() {
 		}
 	)
 
-	for {
-		select {
-		// when tests are toggled
-		case selectedID := <-c.testsView.SelectedStepChan:
-			c.logs.Toggle(selectedID)
-
-			selection = view.Selection{Type: view.SelectionTypeID, Value: selectedID}
-			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
-
-		// when display mode is toggled
-		case m := <-c.testsView.ToggleDisplayModeChan:
-			switch m {
+	// HANDLE USER EVENTS
+	// these are unique because app.Draw() cannot be called for these
+	// otherwise race conditions will happen
+	c.testsView.SetHandlers(
+		func() {
+			switch displayMode {
 			case view.ModeParseTests:
 				displayMode = view.ModeParseTestsFuller
 			default:
@@ -88,12 +82,21 @@ func (c *CLController) handleEvents() {
 			}
 
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
-
-		// when user scrolls
-		case msg := <-c.testsView.UserDidScrollChan:
-			detailText = msg.Msg
-			selection = view.Selection{Type: view.SelectionTypeRow, Value: msg.Row}
+		},
+		func(id int) {
+			c.logs.Toggle(id)
+			selection = view.Selection{Type: view.SelectionTypeID, Value: id}
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
+		},
+		func(txt string, row int) {
+			detailText = txt
+			selection = view.Selection{Type: view.SelectionTypeRow, Value: row}
+			c.testsView.UpdateDetail(detailText)
+		})
+
+	// HANDLE AUTOMATIC EVENTS
+	for {
+		select {
 
 		// when ticker goes off
 		case <-ticker.C:
@@ -103,6 +106,8 @@ func (c *CLController) handleEvents() {
 		case testSuite := <-c.testSuiteChan:
 			c.logs[0].TestSuites = append(c.logs[0].TestSuites, testSuite)
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
+
+		// when parsing finishes
 		case <-c.doneChan:
 			mode = view.ModeParseTestsFinished
 			ticker.Stop()
