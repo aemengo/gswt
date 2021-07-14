@@ -1,5 +1,7 @@
 package view
 
+import "github.com/gdamore/tcell/v2"
+
 const (
 	ModeChooseCommits = iota
 	ModeChooseChecks
@@ -11,7 +13,6 @@ const (
 	ModeParseTestsFuller
 )
 
-type TxtMsg struct {
-	Msg string
-	Row int
-}
+var (
+	viewBackgroundColor = tcell.NewRGBColor(0, 43, 54)
+)
