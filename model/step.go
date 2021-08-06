@@ -1,7 +1,5 @@
 package model
 
-import "strings"
-
 type Step struct {
 	ID       int
 	Title    string
@@ -20,7 +18,7 @@ func (s *Step) FailedTestSuites() []TestSuite {
 	var ts []TestSuite
 
 	for _, suite := range s.TestSuites {
-		if !strings.Contains(suite.Title, "Failed: 0") {
+		if len(suite.FailedTestRuns()) != 0 {
 			ts = append(ts, suite)
 		}
 	}
