@@ -55,7 +55,7 @@ func New(ctx context.Context, client *github.Client, logger *log.Logger, homeDir
 }
 
 func (s *Service) Logs(checkRun *github.CheckRun) (string, error) {
-	path := s.logPath(checkRun)
+	path := s.LogPath(checkRun)
 	_, err := os.Stat(path)
 	if err == nil {
 		return path, nil
@@ -183,7 +183,7 @@ func (s *Service) pullAllWorkflowRuns() {
 	}
 }
 
-func (s *Service) logPath(checkRun *github.CheckRun) string {
+func (s *Service) LogPath(checkRun *github.CheckRun) string {
 	filename := fmt.Sprintf("%d.log", checkRun.GetID())
 	return filepath.Join(utils.LogsDir(s.homeDir), filename)
 }

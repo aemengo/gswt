@@ -32,7 +32,7 @@ func testParser(t *testing.T, _ spec.G, it spec.S) {
 
 		assertNoError(t, scanner.Err())
 
-		parser := model.NewParser(nil, nil)
+		parser := model.NewParser(nil, nil, nil)
 		parser.ParseGoTestStep(&id, &step)
 
 		assertNum(t, len(step.TestSuites), 2)
@@ -78,7 +78,7 @@ func testParserStdin(t *testing.T, _ spec.G, it spec.S) {
 		assertNoError(t, err)
 		defer f.Close()
 
-		parser := model.NewParser(testSuiteChan, doneChan)
+		parser := model.NewParser(testSuiteChan, nil, doneChan)
 		go parser.ParseGoTestStdin(f)
 
 		testSuites := collectTestSuites()

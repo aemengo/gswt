@@ -115,6 +115,15 @@ func (c *Controller) handleEvents(commits []*github.RepositoryCommit, checkRuns 
 			c.checksView.Load(c.app, view.ModeChooseChecks, commits, checkRuns, commitSHA)
 		},
 		func(key tcell.Key) {
+			if key == tcell.KeyTab {
+				c.app.Suspend(func() {
+					logsPath := c.svc.LogPath(chkSuite.Selected)
+					utils.ShowFileInEditor(logsPath)
+				})
+
+				return
+			}
+
 			logMode = view.ModeParseLogs
 			c.logsView.Load(c.app, view.ModeChooseChecks, chkSuite, logs, detailText)
 		},

@@ -78,7 +78,7 @@ func LogsFromFile(logPath string) (Logs, error) {
 	}
 
 	for i := range logs {
-		NewParser(nil, nil).ParseGoTestStep(&id, &logs[i])
+		NewParser(nil, nil, nil).ParseGoTestStep(&id, &logs[i])
 	}
 
 	return logs, nil

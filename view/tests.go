@@ -9,6 +9,7 @@ import (
 )
 
 type Tests struct {
+	escHandler              func(key tcell.Key)
 	enterHandler            func()
 	selectedHandler         func(id int)
 	selectionChangedHandler func(txt string, row int)
@@ -18,6 +19,7 @@ type Tests struct {
 
 func NewTests() *Tests {
 	return &Tests{
+		escHandler:              func(key tcell.Key) {},
 		enterHandler:            func() {},
 		selectedHandler:         func(id int) {},
 		selectionChangedHandler: func(txt string, row int) {},
@@ -49,7 +51,8 @@ func (v *Tests) Load(app *tview.Application, logs model.Logs, mode int, displayM
 	app.SetRoot(flex, true)
 }
 
-func (v *Tests) SetHandlers(enterHandler func(), selectedHandler func(id int), selectionChangedHandler func(txt string, row int)) {
+func (v *Tests) SetHandlers(escHandler func(key tcell.Key), enterHandler func(), selectedHandler func(id int), selectionChangedHandler func(txt string, row int)) {
+	v.escHandler = escHandler
 	v.enterHandler = enterHandler
 	v.selectedHandler = selectedHandler
 	v.selectionChangedHandler = selectionChangedHandler
@@ -96,7 +99,7 @@ func (v *Tests) buildDetailTextView() *tview.TextView {
 func (v *Tests) buildTestsTable(logs model.Logs, mode int, selectedRows ...Selection) *tview.Table {
 	return logsDetailView(
 		logs,
-		func(key tcell.Key) {},
+		v.escHandler,
 		v.selectedHandler,
 		v.enterHandler,
 		v.selectionChangedHandler,

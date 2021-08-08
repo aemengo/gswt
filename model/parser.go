@@ -30,14 +30,16 @@ type Parser struct {
 
 	doneChan       chan bool
 	testSuiteChan  chan TestSuite
+	lineChan       chan string
 	testSuiteIndex int
 }
 
-func NewParser(testSuiteChan chan TestSuite, doneChan chan bool) *Parser {
+func NewParser(testSuiteChan chan TestSuite, lineChan chan string, doneChan chan bool) *Parser {
 	return &Parser{
 		suiteIndexMapping: map[string]int{},
 		runIndexMapping:   map[string]map[string]int{},
 		testSuiteChan:     testSuiteChan,
+		lineChan:          lineChan,
 		doneChan:          doneChan,
 		testSuiteIndex:    0,
 
@@ -79,6 +81,8 @@ func (p *Parser) ParseGoTestStdin(stdin io.Reader) {
 }
 
 func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
+	defer p.sendLine(line)
+
 	if p.suiteMatcher.MatchString(line) {
 		step.TestSuites = append(step.TestSuites, TestSuite{
 			ID:    *id,
@@ -219,4 +223,10 @@ func (p *Parser) sendTestSuites(step *Step) {
 	}
 
 	p.testSuiteIndex = i
+}
+
+func (p *Parser) sendLine(line string) {
+	if p.lineChan != nil {
+		p.lineChan <- line
+	}
 }

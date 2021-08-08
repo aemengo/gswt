@@ -2,7 +2,9 @@ package controller
 
 import (
 	"github.com/aemengo/gswt/model"
+	"github.com/aemengo/gswt/utils"
 	"github.com/aemengo/gswt/view"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"io"
 	"log"
@@ -13,6 +15,7 @@ type CLController struct {
 	app           *tview.Application
 	stdin         io.Reader
 	testSuiteChan chan model.TestSuite
+	lineChan      chan string
 	doneChan      chan bool
 	testsView     *view.Tests
 	logger        *log.Logger
@@ -28,6 +31,7 @@ func NewCLController(app *tview.Application, logger *log.Logger, stdin io.Reader
 		logger:        logger,
 		stdin:         stdin,
 		testSuiteChan: make(chan model.TestSuite, 1),
+		lineChan:      make(chan string, 1),
 		doneChan:      make(chan bool, 1),
 		testsView:     view.NewTests(),
 		startTime:     time.Now(),
@@ -46,7 +50,7 @@ func (c *CLController) Run() error {
 
 	go c.handleEvents()
 
-	go model.NewParser(c.testSuiteChan, c.doneChan).ParseGoTestStdin(c.stdin)
+	go model.NewParser(c.testSuiteChan, c.lineChan, c.doneChan).ParseGoTestStdin(c.stdin)
 
 	return c.app.Run()
 }
@@ -73,6 +77,13 @@ func (c *CLController) handleEvents() {
 	// these are unique because app.Draw() cannot be called for these
 	// otherwise race conditions will happen
 	c.testsView.SetHandlers(
+		func(key tcell.Key) {
+			if key == tcell.KeyTab {
+				c.app.Suspend(func() {
+					utils.ShowLogsInEditor(c.logs)
+				})
+			}
+		},
 		func() {
 			switch displayMode {
 			case view.ModeParseTests:
@@ -103,6 +114,8 @@ func (c *CLController) handleEvents() {
 			c.testsView.UpdateStatus(mode, c.logs, testDuration())
 
 		// when parsing updates
+		case line := <-c.lineChan:
+			c.logs[0].Lines = append(c.logs[0].Lines, line)
 		case testSuite := <-c.testSuiteChan:
 			c.logs[0].TestSuites = append(c.logs[0].TestSuites, testSuite)
 			c.testsView.Load(c.app, c.logs, mode, displayMode, testDuration(), detailText, selection)
