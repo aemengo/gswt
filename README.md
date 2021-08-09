@@ -42,3 +42,5 @@ gh-swt buildpacks/pack 1000
     spec.Run(t, "object", testObject, spec.Report(report.Terminal{}))
   }
   ```
+
+* Hitting `TAB` will use your shell's `$EDITOR` variable to view original log output
