@@ -50,6 +50,6 @@ func ShowFileInEditor(path string) error {
 	}
 
 	command := exec.Command(binaryPath, path)
-	command.Stdout, command.Stderr = os.Stdout, os.Stderr
+	command.Stdin, command.Stdout, command.Stderr = os.Stdin, os.Stdout, os.Stderr
 	return command.Run()
 }
