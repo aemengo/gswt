@@ -9,6 +9,7 @@ type Step struct {
 	Success  bool
 
 	Lines      []string
+	ExtraLines []string
 	TestSuites []TestSuite
 }
 

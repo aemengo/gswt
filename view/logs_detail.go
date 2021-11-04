@@ -33,6 +33,7 @@ func logsDetailView(logs model.Logs, escHandler func(key tcell.Key), selectedHan
 		if step.Selected {
 			if step.IsTest() {
 				showTestSuites(table, step, &row, rowIDMapping, idRowMapping)
+				showLogLines(table, step, &row)
 				continue
 			}
 
@@ -227,7 +228,7 @@ func showTestSuites(table *tview.Table, step model.Step, row *int, rowIDMapping 
 }
 
 func showLogLines(table *tview.Table, step model.Step, row *int) {
-	if len(step.Lines) == 0 {
+	if len(step.ExtraLines) == 0 {
 		table.SetCell(*row, 0,
 			tview.NewTableCell("").
 				SetSelectable(false))
@@ -244,7 +245,7 @@ func showLogLines(table *tview.Table, step model.Step, row *int) {
 	diffRemoveRegex := regexp.MustCompile(`^\s*-`)
 	diffAddRegex := regexp.MustCompile(`^\s*\+`)
 
-	for i, line := range step.Lines {
+	for i, line := range step.ExtraLines {
 		var (
 			txt    string
 			prefix = fmt.Sprintf("   [yellow::b]%d[-:-:-] ", i+1)
@@ -255,7 +256,7 @@ func showLogLines(table *tview.Table, step model.Step, row *int) {
 			txt = prefix + "[red]" + line
 		case diffAddRegex.MatchString(line):
 			txt = prefix + "[green]" + line
-		case !step.Success && i == len(step.Lines)-1:
+		case !step.Success && i == len(step.ExtraLines)-1:
 			txt = prefix + "[red::b]" + line
 		default:
 			txt = prefix + line

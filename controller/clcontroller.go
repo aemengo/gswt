@@ -50,7 +50,7 @@ func (c *CLController) Run() error {
 
 	go c.handleEvents()
 
-	go model.NewParser(c.testSuiteChan, c.lineChan, c.doneChan).ParseGoTestStdin(c.stdin)
+		go model.NewParser(c.testSuiteChan, c.lineChan, c.doneChan).ParseGoTestStdin(c.stdin)
 
 	return c.app.Run()
 }

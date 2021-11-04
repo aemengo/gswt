@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,6 +28,9 @@ type Parser struct {
 	// workaround to capture main text before loaded
 	mainTestRunName string
 	mainTestLines   []string
+
+	// workaround to capture panic information
+	extraLines []string
 
 	doneChan       chan bool
 	testSuiteChan  chan TestSuite
@@ -69,6 +73,13 @@ func (p *Parser) ParseGoTestStdin(stdin io.Reader) {
 	for scanner.Scan() {
 		p.parseGoTestLine(&id, &step, scanner.Text())
 	}
+
+	f, _ := os.Create("/tmp/anthony.txt")
+	for _, line := range step.ExtraLines {
+		f.WriteString(fmt.Sprintf("[%s]\n", line))
+	}
+
+	//fmt.Println("BANANAAD", len(step.ExtraLines))
 
 	// ignore the Err() on purpose
 	// _ = scanner.Err()
@@ -192,12 +203,15 @@ func (p *Parser) parseGoTestLine(id *int, step *Step, line string) {
 		return
 	}
 
-	if p.currentTestRun != "" {
-		if p.currentTestSuite == "" {
-			p.mainTestLines = append(p.mainTestLines, line)
-			return
-		}
+	switch {
+	case p.currentTestSuite == "" && p.currentTestRun == "":
+		//p.extraLines = append(p.extraLines, line)
+		step.ExtraLines = append(step.ExtraLines, line)
 
+	case p.currentTestSuite == "" && p.currentTestRun != "":
+		p.mainTestLines = append(p.mainTestLines, line)
+
+	case p.currentTestRun != "":
 		for k, si := range p.suiteIndexMapping {
 			ri, ok := p.runIndexMapping[k][p.currentTestRun]
 			if ok {
