@@ -207,12 +207,17 @@ func showTestSuites(table *tview.Table, step model.Step, row *int, rowIDMapping 
 
 		txt := failureRegex.ReplaceAllString(ts.Title, "[red::b]$1[-:-:-]")
 
+		warn := ""
+		if !strings.Contains(ts.Title, "Failed:") {
+			warn = " [yellow](This suite may have panicked, press TAB to see full log)[-]"
+		}
+
 		table.SetCell(*row, 0,
 			tview.NewTableCell("").
 				SetSelectable(false))
 
 		table.SetCell(*row, 1,
-			tview.NewTableCell(icon+fmt.Sprintf("[darkgray]"+txt+"[darkgray]")).
+			tview.NewTableCell(icon+txt+warn).
 				SetTextColor(tcell.ColorDarkGray).
 				SetSelectable(true))
 
