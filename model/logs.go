@@ -152,6 +152,16 @@ func (l Logs) TestCount() int {
 	return count
 }
 
+func (l Logs) HaveUnhandledFailures() bool {
+	for _, s := range l {
+		if s.HaveUnhandledFailures() {
+			return true
+		}
+	}
+
+	return false
+}
+
 func bPtr(b bool) *bool {
 	return &b
 }

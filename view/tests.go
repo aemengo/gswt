@@ -66,7 +66,12 @@ func (v *Tests) UpdateStatus(mode int, logs model.Logs, duration time.Duration) 
 	if mode == ModeParseTestsRunning {
 		v.statusBar.SetText(fmt.Sprintf("Running %s... (%s)", testsCount(logs), duration))
 	} else {
-		v.statusBar.SetText(fmt.Sprintf("Completed %s! (%s)", testsCount(logs), duration))
+		warn := ""
+		if logs.HaveUnhandledFailures() {
+			warn = "[yellow](Some failures are not showing, press TAB to see full log)[-]"
+		}
+
+		v.statusBar.SetText(fmt.Sprintf("%s Completed %s! (%s)", warn, testsCount(logs), duration))
 	}
 }
 

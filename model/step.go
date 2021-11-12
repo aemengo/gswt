@@ -27,3 +27,14 @@ func (s *Step) FailedTestSuites() []TestSuite {
 
 	return ts
 }
+
+func (s *Step) HaveUnhandledFailures() bool {
+	return len(s.FailedTestSuites()) == 0 && func() bool {
+		for _, line := range s.Lines {
+			if strings.Contains(line, "FAIL") {
+				return true
+			}
+		}
+		return false
+	}()
+}
