@@ -1,6 +1,8 @@
 package model
 
-import "strings"
+import (
+	"strings"
+)
 
 type Step struct {
 	ID       int
@@ -31,7 +33,7 @@ func (s *Step) FailedTestSuites() []TestSuite {
 func (s *Step) HaveUnhandledFailures() bool {
 	return len(s.FailedTestSuites()) == 0 && func() bool {
 		for _, line := range s.Lines {
-			if strings.Contains(line, "FAIL") {
+			if strings.HasPrefix(line, "FAIL") {
 				return true
 			}
 		}

@@ -68,7 +68,7 @@ func (v *Tests) UpdateStatus(mode int, logs model.Logs, duration time.Duration) 
 	} else {
 		warn := ""
 		if logs.HaveUnhandledFailures() {
-			warn = "[yellow](Some failures are not showing, press TAB to see full log)[-]"
+			warn = "[yellow](Some failures may not be showing, press TAB to see full log)[-]"
 		}
 
 		v.statusBar.SetText(fmt.Sprintf("%s Completed %s! (%s)", warn, testsCount(logs), duration))
